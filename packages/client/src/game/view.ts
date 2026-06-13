@@ -9,6 +9,7 @@ import { buildBuilding, drawRoads, drawTerrain, TEAM_COLORS } from './placeholde
 import { Unit } from './unit';
 import { getHeroSheet, getPeonSheet, loadThemeSprites } from './sprites';
 import { sessionToArchetypeKey } from './archetype';
+import { loadTilemaps, hasTilemaps, buildTilemap } from './tilemap';
 
 interface Particle {
   g: Graphics;
@@ -117,7 +118,11 @@ export class GameView {
     this.worldOffset = { x: -minX, y: -minY };
     this.viewport.addChild(worldLayer);
 
-    worldLayer.addChild(drawTerrain(this.theme, projection));
+    if (this.theme.style === 'topdown' && hasTilemaps()) {
+      worldLayer.addChild(buildTilemap(this.theme)); // niesortowana warstwa tła pod unitLayer
+    } else {
+      worldLayer.addChild(drawTerrain(this.theme, projection));
+    }
     worldLayer.addChild(drawRoads(this.theme, projection, this.roadSegments()));
 
     // Budynki i jednostki we wspólnej warstwie sortowanej po głębokości —
@@ -134,9 +139,8 @@ export class GameView {
       this.updateParticles(dt);
     });
 
-    // Atlasy PixelLab ładujemy zanim powstaną jednostki — brak atlasu danego
-    // klucza = jednostka spada na placeholder (fallback w Unit).
-    await loadThemeSprites(this.theme.id);
+    // Atlasy + tilesety PixelLab ładujemy zanim powstaną jednostki/teren.
+    await Promise.all([loadThemeSprites(this.theme.id), loadTilemaps(this.theme.id)]);
 
     this.unsubscribe = useWorld.subscribe((state) => this.reconcile(state.heroes, state.peons, state.missions));
     const { heroes, peons, missions } = useWorld.getState();
