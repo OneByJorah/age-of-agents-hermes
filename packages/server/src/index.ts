@@ -15,10 +15,15 @@ if (demoMode) {
   // No-op, żeby zainstalowane hooki nie sypały 404 gdy chodzi tryb demo.
   app.post('/hooks', async () => ({ ok: true }));
   app.get('/hooks/status', async () => ({ installed: false, demo: true }));
+  app.get('/building-stats', async () => ({ updatedAt: new Date().toISOString(), buildings: {} }));
 } else {
   const { TranscriptWatcher } = await import('./watcher.js');
   const { translateHook, hooksInstalled, installHooks, uninstallHooks } = await import('./hooks.js');
+  const { getBuildingStats } = await import('./building-stats.js');
   const watcher = new TranscriptWatcher(world);
+
+  // Statystyki zużycia tokenów per budynek (skan transkryptów, cache 60 s).
+  app.get('/building-stats', async () => getBuildingStats());
 
   // Szybki kanał zdarzeń: hooki HTTP Claude Code (typ "http" w settings.json).
   app.post('/hooks', async (request) => {

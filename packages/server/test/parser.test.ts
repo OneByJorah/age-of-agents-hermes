@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { interpretLine } from '../src/transcript/parser.js';
+import { interpretLine, isHumanPrompt } from '../src/transcript/parser.js';
 
 describe('interpretLine', () => {
   it('zamienia enqueue na fakt prompt', () => {
@@ -72,12 +72,39 @@ describe('interpretLine', () => {
     });
   });
 
-  it('last-prompt daje tytuł, śmieci dają pustą listę', () => {
-    expect(interpretLine(JSON.stringify({ type: 'last-prompt', lastPrompt: 'Refactor API' }))).toEqual([
+  it('jawny tytuł (custom/ai) staje się faktem title; last-prompt jest ignorowany', () => {
+    expect(interpretLine(JSON.stringify({ type: 'custom-title', customTitle: 'Refactor API' }))).toEqual([
       { kind: 'title', title: 'Refactor API' },
     ]);
+    expect(interpretLine(JSON.stringify({ type: 'ai-title', aiTitle: 'Naprawa auth' }))).toEqual([
+      { kind: 'title', title: 'Naprawa auth' },
+    ]);
+    // last-prompt nie nazywa już bohatera (nazwa skakała przy każdej turze)
+    expect(interpretLine(JSON.stringify({ type: 'last-prompt', lastPrompt: 'Refactor API' }))).toEqual([]);
     expect(interpretLine('to nie jest json{')).toEqual([]);
     expect(interpretLine(JSON.stringify({ type: 'file-history-snapshot' }))).toEqual([]);
+  });
+
+  it('filtruje syntetyczne tury z promptów (interrupted, system-reminder, skille, komendy)', () => {
+    const user = (text: string) =>
+      interpretLine(JSON.stringify({ type: 'user', timestamp: '2026-06-13T10:00:00.000Z', message: { role: 'user', content: text } }));
+    // śmieci → brak faktu prompt
+    expect(user('[Request interrupted by user]')).toEqual([]);
+    expect(user('<system-reminder>uważaj</system-reminder>')).toEqual([]);
+    expect(user('<command-name>/compact</command-name>')).toEqual([]);
+    expect(user('Base directory for this skill: /Users/x/.claude/plugins/...')).toEqual([]);
+    expect(user('Caveat: The messages below were generated...')).toEqual([]);
+    // realne prompty (także markdown i krótkie) → zostają
+    expect(user('# Zadanie: zrób lead z bota')).toContainEqual({ kind: 'prompt', text: '# Zadanie: zrób lead z bota', ts: '2026-06-13T10:00:00.000Z' });
+    expect(user('tak deploy')).toContainEqual({ kind: 'prompt', text: 'tak deploy', ts: '2026-06-13T10:00:00.000Z' });
+  });
+
+  it('isHumanPrompt: heurystyka prompt człowieka', () => {
+    expect(isHumanPrompt('napraw testy')).toBe(true);
+    expect(isHumanPrompt('# nagłówek markdown')).toBe(true);
+    expect(isHumanPrompt('   ')).toBe(false);
+    expect(isHumanPrompt('[Request interrupted by user]')).toBe(false);
+    expect(isHumanPrompt('<system-reminder>x</system-reminder>')).toBe(false);
   });
 
   it('skraca bardzo długie prompty', () => {

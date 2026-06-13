@@ -171,7 +171,13 @@ export class GameView {
     // Budynki i jednostki we wspólnej warstwie sortowanej po głębokości —
     // w izometrii jednostka może zniknąć ZA budynkiem.
     this.unitLayer.sortableChildren = true;
-    for (const def of this.theme.buildings) this.unitLayer.addChild(buildBuilding(def, this.theme, projection));
+    for (const def of this.theme.buildings) {
+      const node = buildBuilding(def, this.theme, projection);
+      node.eventMode = 'static';
+      node.cursor = 'pointer';
+      node.on('pointertap', () => useWorld.getState().selectBuilding(def.id));
+      this.unitLayer.addChild(node);
+    }
 
     // Dekoracje: kwiaty/krzaki płasko pod jednostkami (worldLayer, przed unitLayer),
     // drzewa/skały zasłaniające w unitLayer z głębokością (jak budynki/jednostki).
@@ -200,7 +206,11 @@ export class GameView {
     this.app.ticker.add((ticker) => {
       const dt = ticker.deltaMS / 1000;
       this.elapsed += dt;
-      for (const unit of this.units.values()) unit.update(dt);
+      const selected = useWorld.getState().selectedSessionId;
+      for (const [id, unit] of this.units) {
+        unit.setBubbleForced(id === selected);
+        unit.update(dt);
+      }
       this.updateRetiring(dt);
       this.updateBuildingFx(dt);
       this.updateParticles(dt);
@@ -491,10 +501,21 @@ export class GameView {
     const door = this.building(buildingId).door;
     const startNode = this.graph.nearest(unit.gx, unit.gy);
     const route = this.graph.route(startNode.id, `door:${buildingId}`);
-    const jitter = spotJitter(unit.id, slot);
-    route.push({ id: 'spot', gx: door.gx + jitter.dx, gy: door.gy + jitter.dy });
+    // Praca: ciasny rozrzut przy drzwiach. Bezczynność: szeroki krąg wokół twierdzy,
+    // żeby tłum bohaterów się nie nakładał (declutter sprite'ów i etykiet).
+    const spot = state === 'working' ? spotJitter(unit.id, slot) : idleScatter(unit.id);
+    route.push({ id: 'spot', gx: door.gx + spot.dx, gy: door.gy + spot.dy });
     unit.setPath(route);
   }
+}
+
+/** Deterministyczny krąg pozycji bezczynnych wokół twierdzy (luźny tłum, nie stos). */
+function idleScatter(id: string): { dx: number; dy: number } {
+  let h = 0;
+  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const angle = (h % 360) * (Math.PI / 180);
+  const radius = 1.5 + (h % 6) * 0.4; // 1.5–3.5 kafle
+  return { dx: Math.cos(angle) * radius, dy: Math.sin(angle) * radius };
 }
 
 /** Deterministyczny rozrzut miejsc pracy, żeby jednostki się nie nakładały. */

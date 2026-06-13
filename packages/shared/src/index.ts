@@ -13,6 +13,8 @@ export interface HeroSnapshot {
   sessionId: string;
   title: string;
   projectDir: string;
+  /** Czytelna nazwa projektu (basename cwd, np. "RTS agents") — do HUD. */
+  projectName?: string;
   model?: string;
   gitBranch?: string;
   permissionMode?: string;
@@ -75,3 +77,57 @@ export type GameEvent =
 
 export const SERVER_PORT = 8123;
 export const WS_PATH = '/ws';
+
+// ─── Budynki + mapowanie narzędzie→budynek (serce metafory gry) ───
+// Kanoniczne w shared, bo potrzebują tego ZARÓWNO klient (placement jednostek)
+// JAK I serwer (atrybucja tokenów do budynku w statystykach).
+
+export type BuildingId =
+  | 'citadel'
+  | 'tower'
+  | 'forge'
+  | 'library'
+  | 'mine'
+  | 'barracks'
+  | 'market'
+  | 'guild';
+
+const TOOL_BUILDING: Record<string, BuildingId> = {
+  WebSearch: 'tower',
+  WebFetch: 'tower',
+  Edit: 'forge',
+  Write: 'forge',
+  MultiEdit: 'forge',
+  NotebookEdit: 'forge',
+  Read: 'library',
+  Grep: 'library',
+  Glob: 'library',
+  LSP: 'library',
+  Bash: 'mine',
+  BashOutput: 'mine',
+  Task: 'barracks',
+  Agent: 'barracks',
+  Workflow: 'barracks',
+};
+
+/** Polecenia gitowe w Bash kierujemy na targ (karawana z towarem). */
+const GIT_RE = /\bgit\s+(commit|push|pull|merge|rebase)\b/;
+
+export function toolToBuilding(tool: string | undefined, detail?: string): BuildingId {
+  if (!tool) return 'citadel';
+  if (tool === 'Bash' && detail && GIT_RE.test(detail)) return 'market';
+  if (tool.startsWith('mcp__')) return 'guild';
+  return TOOL_BUILDING[tool] ?? 'citadel';
+}
+
+/** Zużycie tokenów (wyjściowych) budynku w oknach czasowych. */
+export interface BuildingWindowStats {
+  today: number;
+  week: number;
+  month: number;
+}
+
+export interface BuildingStatsResponse {
+  updatedAt: string;
+  buildings: Partial<Record<BuildingId, BuildingWindowStats>>;
+}

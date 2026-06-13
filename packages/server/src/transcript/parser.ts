@@ -6,6 +6,28 @@ function clip(text: string, max = 240): string {
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
 }
 
+/**
+ * Czy tekst to PROMPT CZŁOWIEKA, a nie syntetyczna tura Claude Code.
+ * Transkrypt miesza prawdziwe prompty z: przerwaniami, blokami
+ * <system-reminder>/<command-*>/<local-command-*>, "Caveat:…", wstrzyknięciami
+ * skilli ("Base directory for this skill:…"). Bez filtra trafiają one do misji
+ * i nazw bohaterów jako śmieci.
+ *
+ * WKŁAD USERA (learning): to heurystyka — dostrój listę odrzuceń pod swoje sesje.
+ * Jest celowo KONSERWATYWNA: odrzuca tylko jawne markery systemowe, a markdown
+ * ("# Zadanie:…") i krótkie wiadomości ("tak deploy") traktuje jak realne prompty.
+ */
+export function isHumanPrompt(text: string): boolean {
+  const t = text.trim();
+  if (!t) return false;
+  if (t.startsWith('<')) return false; // <system-reminder>, <command-name>, <local-command-stdout>…
+  if (t.startsWith('[Request interrupted')) return false;
+  if (t.startsWith('Caveat:')) return false;
+  if (t.startsWith('Base directory for this skill:')) return false;
+  if (t.includes('<system-reminder>') || t.includes('<command-name>')) return false;
+  return true;
+}
+
 /** Wyciąga krótki opis pracy z inputu narzędzia (do dymka nad jednostką). */
 export function toolDetail(tool: string, input: Record<string, unknown> | undefined): string | undefined {
   if (!input) return undefined;
@@ -52,19 +74,19 @@ export function interpretLine(line: string): Fact[] {
 
   switch (record.type) {
     case 'queue-operation':
-      if (record.operation === 'enqueue' && typeof record.content === 'string') {
+      if (record.operation === 'enqueue' && typeof record.content === 'string' && isHumanPrompt(record.content)) {
         facts.push({ kind: 'prompt', text: clip(record.content), ts });
       }
       break;
 
+    // Tylko JAWNE tytuły sesji (nadane przez CLI) nazywają bohatera. 'last-prompt'
+    // celowo pominięty — nazwa z ostatniego promptu skakała przy każdej turze;
+    // nazwę wyprowadza state-machine (pierwszy realny prompt → projekt → UUID).
     case 'custom-title':
       if (typeof record.customTitle === 'string') facts.push({ kind: 'title', title: record.customTitle });
       break;
     case 'ai-title':
       if (typeof record.aiTitle === 'string') facts.push({ kind: 'title', title: record.aiTitle });
-      break;
-    case 'last-prompt':
-      if (typeof record.lastPrompt === 'string') facts.push({ kind: 'title', title: clip(record.lastPrompt, 80) });
       break;
 
     case 'permission-mode':
@@ -128,13 +150,13 @@ export function interpretLine(line: string): Fact[] {
 
       const content = record.message?.content;
       if (typeof content === 'string') {
-        if (content.trim()) facts.push({ kind: 'prompt', text: clip(content), ts });
+        if (isHumanPrompt(content)) facts.push({ kind: 'prompt', text: clip(content), ts });
       } else if (Array.isArray(content)) {
         for (const block of content) {
           if (block?.type === 'tool_result') {
             facts.push({ kind: 'tool-result', isError: block.is_error === true, ts });
           }
-          if (block?.type === 'text' && typeof block.text === 'string' && block.text.trim()) {
+          if (block?.type === 'text' && typeof block.text === 'string' && isHumanPrompt(block.text)) {
             facts.push({ kind: 'prompt', text: clip(block.text), ts });
           }
         }

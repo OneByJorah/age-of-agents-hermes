@@ -6,6 +6,8 @@ import { buildUnitBody, labelStyle, teamColor } from './placeholders';
 import { stateToAnimation } from './archetype';
 
 const SPEED_GRID_PER_S = 2.2;
+/** Jak długo (s) dymek roboczy jest widoczny po zmianie treści (potem chowamy — declutter). */
+const BUBBLE_TTL = 7;
 
 /** Skala sprite'a PixelLab (~68px canvas) do skali jednostki na kaflu 48px. */
 const SPRITE_SCALE = 0.8;
@@ -32,6 +34,8 @@ export class Unit {
   private nameTag: Text;
   private elapsed = Math.random() * 10;
   private state: HeroStateKind = 'idle';
+  private bubbleUntil = 0; // do kiedy (elapsed) pokazywać świeży dymek
+  private bubbleForced = false; // jednostka zaznaczona → dymek zawsze widoczny
 
   constructor(
     readonly id: string,
@@ -102,12 +106,21 @@ export class Unit {
     return this.path.length > 0;
   }
 
+  /** Zaznaczenie z HUD — wtedy dymek roboczy widoczny bez limitu czasu. */
+  setBubbleForced(forced: boolean): void {
+    this.bubbleForced = forced;
+  }
+
   setState(state: HeroStateKind, bubbleText?: string): void {
     this.state = state;
     this.aura.visible = state === 'thinking';
     this.overlay.text = state === 'awaiting-input' ? '!' : state === 'error' ? '✶' : state === 'sleeping' ? 'zzz' : '';
     this.overlay.style.fill = state === 'awaiting-input' ? 0xfac775 : state === 'error' ? 0xe24b4a : 0xb4b2a9;
-    this.bubble.text = bubbleText ? clip(bubbleText, 34) : '';
+    const newBubble = bubbleText ? clip(bubbleText, 34) : '';
+    if (newBubble !== this.bubble.text) {
+      this.bubble.text = newBubble;
+      if (newBubble) this.bubbleUntil = this.elapsed + BUBBLE_TTL; // odśwież TTL tylko przy realnej zmianie
+    }
     const dimmed = state === 'sleeping';
     this.body.alpha = dimmed ? 0.45 : 1;
     this.nameTag.alpha = dimmed ? 0.45 : 0.9;
@@ -169,6 +182,9 @@ export class Unit {
     if (this.overlay.text === '!') {
       this.overlay.position.y = -34 + Math.sin(this.elapsed * 5) * 3;
     }
+
+    // Dymek: świeży (po zmianie) lub gdy jednostka zaznaczona — reszta czasu schowany.
+    this.bubble.visible = this.bubble.text !== '' && (this.bubbleForced || this.elapsed < this.bubbleUntil);
 
     this.syncScreen();
   }

@@ -15,8 +15,10 @@ interface WorldStore {
   /** Ostatnie linie transkryptu per sesja (bufor do panelu bocznego). */
   transcripts: Record<string, TranscriptLine[]>;
   selectedSessionId?: string;
+  selectedBuildingId?: string;
   setConnected(connected: boolean): void;
   select(sessionId?: string): void;
+  selectBuilding(buildingId?: string): void;
   apply(event: GameEvent): void;
 }
 
@@ -29,7 +31,9 @@ export const useWorld = create<WorldStore>((set) => ({
   missions: {},
   transcripts: {},
   setConnected: (connected) => set({ connected }),
-  select: (selectedSessionId) => set({ selectedSessionId }),
+  // Wybór jednostki i budynku wzajemnie się wykluczają (jeden panel po prawej).
+  select: (selectedSessionId) => set({ selectedSessionId, selectedBuildingId: undefined }),
+  selectBuilding: (selectedBuildingId) => set({ selectedBuildingId, selectedSessionId: undefined }),
   apply: (event) =>
     set((state) => {
       switch (event.type) {

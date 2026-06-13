@@ -1,0 +1,166 @@
+import { readFile, readdir, stat } from 'node:fs/promises';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+import {
+  toolToBuilding,
+  type BuildingId,
+  type BuildingStatsResponse,
+  type BuildingWindowStats,
+} from '@agent-citadel/shared';
+
+/**
+ * Zużycie tokenów per budynek w oknach dzień/tydzień/30 dni.
+ *
+ * Dane historyczne NIE istnieją w pamięci (watcher widzi tylko żywe sesje),
+ * więc skanujemy transkrypty ~/.claude/projects: każdej wiadomości assistant
+ * przypisujemy tokeny WYJŚCIOWE do budynku narzędzia, którego użyła
+ * (toolToBuilding), z podziałem równym gdy dotknęła kilku budynków. Wiadomość
+ * bez narzędzia (samo rozumowanie/tekst) przypisujemy do budynku, przy którym
+ * sesja AKTUALNIE pracuje (ostatnie użyte narzędzie) — inaczej Twierdza
+ * (fallback) pożarłaby większość tokenów. Wynik jest cache'owany.
+ *
+ * WKŁAD USERA (learning): atrybucja (równy podział, rozumowanie→ostatni budynek,
+ * fallback→citadel) i okna czasowe to decyzje do strojenia.
+ */
+
+const DAY = 86_400_000;
+const MONTH = 30 * DAY;
+const CACHE_TTL = 60_000;
+
+interface Bucket {
+  today: number;
+  week: number;
+  month: number;
+}
+
+export interface MsgSample {
+  ts: number; // epoch ms
+  output: number; // tokeny wyjściowe wiadomości
+  tools: { name: string; detail?: string }[];
+}
+
+/**
+ * Czyste: dodaj jedną wiadomość assistant do akumulatora (tokeny→budynek, wg czasu).
+ * `fallback` = budynek dla wiadomości bez narzędzia (budynek bieżącej pracy sesji).
+ */
+export function accumulateMessage(
+  acc: Map<BuildingId, Bucket>,
+  msg: MsgSample,
+  now: number,
+  dayStart: number,
+  fallback: BuildingId = 'citadel',
+): void {
+  if (msg.output <= 0) return;
+  const age = now - msg.ts;
+  if (age < 0 || age > MONTH) return; // poza oknem 30 dni
+
+  const buildings = msg.tools.length
+    ? [...new Set(msg.tools.map((t) => toolToBuilding(t.name, t.detail)))]
+    : [fallback]; // samo rozumowanie → budynek bieżącej pracy sesji
+  const share = msg.output / buildings.length;
+
+  for (const b of buildings) {
+    const cur = acc.get(b) ?? { today: 0, week: 0, month: 0 };
+    cur.month += share;
+    if (age <= 7 * DAY) cur.week += share;
+    if (msg.ts >= dayStart) cur.today += share;
+    acc.set(b, cur);
+  }
+}
+
+/** Wyciąga próbkę z rekordu assistant (lub null gdy nieistotny). */
+function sampleFromRecord(rec: any): MsgSample | undefined {
+  if (rec?.type !== 'assistant' || !rec.message) return undefined;
+  const ts = Date.parse(rec.timestamp);
+  if (!ts) return undefined;
+  const output = Number(rec.message.usage?.output_tokens ?? 0);
+  if (output <= 0) return undefined;
+  const blocks: any[] = Array.isArray(rec.message.content) ? rec.message.content : [];
+  const tools = blocks
+    .filter((b) => b?.type === 'tool_use' && typeof b.name === 'string')
+    .map((b) => ({
+      name: b.name as string,
+      detail: b.name === 'Bash' && typeof b.input?.command === 'string' ? (b.input.command as string) : undefined,
+    }));
+  return { ts, output, tools };
+}
+
+async function scanFile(path: string, acc: Map<BuildingId, Bucket>, now: number, dayStart: number): Promise<void> {
+  const content = await readFile(path, 'utf8');
+  let current: BuildingId = 'citadel'; // budynek bieżącej pracy sesji (ostatnie narzędzie)
+  for (const line of content.split('\n')) {
+    if (!line) continue;
+    let rec: any;
+    try {
+      rec = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    const sample = sampleFromRecord(rec);
+    if (!sample) continue;
+    if (sample.tools.length) {
+      const last = sample.tools[sample.tools.length - 1];
+      current = toolToBuilding(last.name, last.detail);
+    }
+    accumulateMessage(acc, sample, now, dayStart, current);
+  }
+}
+
+export async function computeBuildingStats(root: string, now: number): Promise<BuildingStatsResponse> {
+  const ds = new Date(now);
+  ds.setHours(0, 0, 0, 0);
+  const dayStart = ds.getTime();
+
+  const acc = new Map<BuildingId, Bucket>();
+  let entries: string[] = [];
+  try {
+    entries = await readdir(root, { recursive: true });
+  } catch {
+    return { updatedAt: new Date(now).toISOString(), buildings: {} };
+  }
+
+  for (const rel of entries) {
+    if (!rel.endsWith('.jsonl')) continue;
+    const path = join(root, rel);
+    try {
+      const s = await stat(path);
+      if (now - s.mtimeMs > MONTH) continue; // plik bez zdarzeń w oknie 30 dni
+      await scanFile(path, acc, now, dayStart);
+    } catch {
+      /* pomiń nieczytelny plik */
+    }
+  }
+
+  const buildings: BuildingStatsResponse['buildings'] = {};
+  for (const [b, v] of acc) {
+    buildings[b] = {
+      today: Math.round(v.today),
+      week: Math.round(v.week),
+      month: Math.round(v.month),
+    } satisfies BuildingWindowStats;
+  }
+  return { updatedAt: new Date(now).toISOString(), buildings };
+}
+
+// Cache: skan jest kosztowny (wiele sesji × 30 dni) → liczymy najwyżej raz/min.
+let cache: { at: number; data: BuildingStatsResponse } | undefined;
+let inflight: Promise<BuildingStatsResponse> | undefined;
+
+export async function getBuildingStats(
+  root = join(homedir(), '.claude', 'projects'),
+): Promise<BuildingStatsResponse> {
+  const now = Date.now();
+  if (cache && now - cache.at < CACHE_TTL) return cache.data;
+  if (inflight) return inflight;
+  inflight = computeBuildingStats(root, now)
+    .then((data) => {
+      cache = { at: Date.now(), data };
+      inflight = undefined;
+      return data;
+    })
+    .catch((err) => {
+      inflight = undefined;
+      throw err;
+    });
+  return inflight;
+}

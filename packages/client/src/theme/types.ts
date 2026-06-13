@@ -1,14 +1,8 @@
 import type { Projection } from '../game/projection';
+import type { BuildingId } from '@agent-citadel/shared';
 
-export type BuildingId =
-  | 'citadel'
-  | 'tower'
-  | 'forge'
-  | 'library'
-  | 'mine'
-  | 'barracks'
-  | 'market'
-  | 'guild';
+// BuildingId jest kanoniczny w @agent-citadel/shared (serwer też go potrzebuje).
+export type { BuildingId };
 
 export interface BuildingDef {
   id: BuildingId;

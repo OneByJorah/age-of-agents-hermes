@@ -1,3 +1,4 @@
+import { basename } from 'node:path';
 import type { HeroSnapshot, HeroStateKind } from '@agent-citadel/shared';
 import type { Fact } from './transcript/facts.js';
 import type { World } from './world.js';
@@ -40,6 +41,10 @@ export class SessionTracker {
   private activeMissionId?: string;
   private errorUntil = 0;
   private lastPrompt = { text: '', atMs: 0 };
+  // Kandydaci na nazwę bohatera, wg malejącego priorytetu (patrz displayTitle()).
+  private explicitTitle?: string; // jawny tytuł z CLI (custom-title/ai-title)
+  private firstPrompt?: string; // pierwszy realny prompt człowieka (stabilny)
+  private projectName?: string; // basename cwd, np. "RTS agents"
 
   constructor(
     private readonly world: World,
@@ -54,14 +59,20 @@ export class SessionTracker {
     const now = new Date().toISOString();
     return {
       sessionId: this.sessionId,
-      title: this.sessionId.slice(0, 8),
+      title: this.displayTitle(),
       projectDir: this.projectDir,
+      projectName: this.projectName,
       teamColor: this.world.claimTeamColor(),
       state: 'idle',
       tokens: this.tokens,
       startedAt: now,
       lastActivityAt: now,
     };
+  }
+
+  /** Nazwa bohatera wg priorytetu: jawny tytuł → pierwszy prompt → projekt → UUID. */
+  private displayTitle(): string {
+    return this.explicitTitle ?? this.firstPrompt ?? this.projectName ?? this.sessionId.slice(0, 8);
   }
 
   private patch(patch: Partial<HeroSnapshot>, ts?: string): void {
@@ -80,6 +91,7 @@ export class SessionTracker {
         const atMs = Date.parse(fact.ts) || Date.now();
         if (fact.text === this.lastPrompt.text && Math.abs(atMs - this.lastPrompt.atMs) < 15_000) break;
         this.lastPrompt = { text: fact.text, atMs };
+        if (!this.firstPrompt) this.firstPrompt = clipTitle(fact.text); // stabilna nazwa = pierwsze zadanie
         this.missionCounter++;
         this.activeMissionId = `${this.sessionId}-m${this.missionCounter}`;
         this.world.startMission({
@@ -89,7 +101,7 @@ export class SessionTracker {
           status: 'active',
           startedAt: fact.ts,
         });
-        this.patch({ state: 'thinking' }, fact.ts);
+        this.patch({ state: 'thinking', title: this.displayTitle() }, fact.ts);
         this.world.emitTranscriptLine({
           type: 'transcript-line',
           line: { sessionId: this.sessionId, role: 'user', text: fact.text, ts: fact.ts },
@@ -98,11 +110,14 @@ export class SessionTracker {
       }
 
       case 'title':
-        this.patch({ title: fact.title });
+        this.explicitTitle = fact.title;
+        this.patch({ title: this.displayTitle() });
         break;
 
       case 'meta':
+        if (fact.cwd) this.projectName = basename(fact.cwd);
         this.patch({
+          ...(this.projectName ? { projectName: this.projectName, title: this.displayTitle() } : {}),
           ...(fact.model ? { model: fact.model } : {}),
           ...(fact.gitBranch ? { gitBranch: fact.gitBranch } : {}),
           ...(fact.permissionMode ? { permissionMode: fact.permissionMode } : {}),
@@ -188,4 +203,10 @@ export class SessionTracker {
     }
     return 'keep';
   }
+}
+
+/** Skraca prompt do roli nazwy bohatera. */
+function clipTitle(text: string, max = 40): string {
+  const t = text.trim();
+  return t.length > max ? `${t.slice(0, max - 1)}…` : t;
 }
