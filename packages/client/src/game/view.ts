@@ -126,6 +126,16 @@ export class GameView {
     this.worldOffset = { x: -minX, y: -minY };
     this.viewport.addChild(worldLayer);
 
+    // Assety/tilesety PixelLab MUSZĄ być załadowane PRZED budową terenu/budynków/dekoracji.
+    // Inaczej hasTilemaps()/getBuildingSprite() zwracają puste → placeholdery na starcie,
+    // a przy zmianie motywu scena buduje się ze starym (jeszcze niewyczyszczonym) cache.
+    await Promise.all([
+      loadThemeSprites(this.theme.id),
+      loadBuildingSprites(this.theme.id),
+      loadDecorationSprites(this.theme.id),
+      this.theme.style === 'topdown' ? loadTilemaps(this.theme.id) : loadIsoTiles(this.theme.id),
+    ]);
+
     if (this.theme.style === 'topdown' && hasTilemaps()) {
       worldLayer.addChild(buildTilemap(this.theme)); // niesortowana warstwa tła pod unitLayer
     } else if (this.theme.style === 'iso' && hasIsoTiles()) {
@@ -170,14 +180,6 @@ export class GameView {
       this.updateRetiring(dt);
       this.updateParticles(dt);
     });
-
-    // Atlasy + tilesety PixelLab ładujemy zanim powstaną jednostki/teren.
-    await Promise.all([
-      loadThemeSprites(this.theme.id),
-      loadBuildingSprites(this.theme.id),
-      loadDecorationSprites(this.theme.id),
-      this.theme.style === 'topdown' ? loadTilemaps(this.theme.id) : loadIsoTiles(this.theme.id),
-    ]);
 
     this.unsubscribe = useWorld.subscribe((state) => this.reconcile(state.heroes, state.peons, state.missions));
     const { heroes, peons, missions } = useWorld.getState();
