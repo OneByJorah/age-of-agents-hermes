@@ -2,6 +2,7 @@ node_modules/
 dist/
 *.log
 .DS_Store
+.superpowers/
 
 # Surowe klatki pobierane offline z PixelLab (npm run assets) trafiają do downloads/;
 # do repo idą tylko spakowane atlasy z public/assets/ — to własne assety, pivot na
