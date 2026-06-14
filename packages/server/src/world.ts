@@ -26,7 +26,15 @@ export class World {
   }
 
   private emit(event: GameEvent): void {
-    for (const listener of this.listeners) listener(event);
+    // Listener (np. broadcast WS na zerwanym sockecie) nie może ubić mutacji
+    // ani — przez sweep/connection — całego procesu. Izolujemy każdy z osobna.
+    for (const listener of this.listeners) {
+      try {
+        listener(event);
+      } catch (err) {
+        console.error('[world] błąd listenera dla zdarzenia', event.type, err);
+      }
+    }
   }
 
   snapshot(): WorldSnapshot {

@@ -8,6 +8,18 @@ const demoMode = process.argv.includes('--demo');
 const app = Fastify({ logger: { level: 'info' } });
 const world = new World();
 
+// Siatka bezpieczeństwa: pojedynczy nieobsłużony błąd nie może wygasić serwera
+// wizualizacji — wtedy klient zostaje bez źródła danych ("nikt niewidoczny").
+// Logujemy głośno i działamy dalej. To świadomy kompromis: serwer tylko czyta
+// pliki sesji i rozsyła stan, więc utrzymanie procesu jest bezpieczniejsze niż
+// znikanie. Realne błędy nadal trafiają do logu z pełnym stosem.
+process.on('unhandledRejection', (reason) => {
+  app.log.error({ err: reason }, 'Nieobsłużone odrzucenie obietnicy — serwer działa dalej');
+});
+process.on('uncaughtException', (err) => {
+  app.log.error({ err }, 'Nieobsłużony wyjątek — serwer działa dalej');
+});
+
 app.get('/health', async () => ({ ok: true, demo: demoMode }));
 
 // Wszystkie trasy MUSZĄ powstać przed listen() — fastify zamyka rejestrację.
@@ -56,7 +68,14 @@ await app.listen({ port: SERVER_PORT, host: '127.0.0.1' });
 const wss = new WebSocketServer({ server: app.server, path: WS_PATH });
 
 function send(socket: WebSocket, event: GameEvent): void {
-  if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(event));
+  if (socket.readyState !== WebSocket.OPEN) return;
+  // Klient mógł zniknąć w trakcie broadcastu — jego awaria nie może przerwać
+  // dostawy do pozostałych ani (przez listenera świata) ubić mutacji.
+  try {
+    socket.send(JSON.stringify(event));
+  } catch (err) {
+    app.log.warn({ err }, 'Wysyłka WS nie powiodła się — pomijam tego klienta');
+  }
 }
 
 wss.on('connection', (socket) => {
