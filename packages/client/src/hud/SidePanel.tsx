@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { toolToBuilding, type BuildingId, type HeroStateKind, type TranscriptLine } from '@agent-citadel/shared';
+import { toolToBuilding, type AgentKind, type BuildingId, type HeroStateKind, type TranscriptLine } from '@agent-citadel/shared';
 import { useWorld } from '../store';
 import { useSettings } from '../settings';
 import { useUi, buildingText } from '../i18n';
@@ -32,6 +32,12 @@ const BUILDING_EMOJI: Record<BuildingId, string> = {
   barracks: '👥',
   market: '📦',
   guild: '🔌',
+};
+
+/** Etykieta + kolor odznaki agenta w panelu. */
+const AGENT_BADGE: Record<AgentKind, { label: string; color: string } | undefined> = {
+  claude: undefined, // domyślny agent — bez odznaki, żeby nie zaśmiecać
+  codex: { label: 'Codex', color: '#10a37f' },
 };
 
 /** Panel wybranej sesji: karta pionka (stan, statystyki, zadanie, ostatnie akcje) + transkrypt. */
@@ -91,6 +97,17 @@ export function SidePanel() {
           <span style={{ width: 12, height: 12, borderRadius: '50%', background: teamColorHex(hero.teamColor), marginTop: 4, flex: 'none' }} />
           <div style={{ minWidth: 0 }}>
             <strong className="px" style={{ fontSize: 15, color: '#fac775' }}>{hero.title}</strong>
+            {(() => {
+              const badge = AGENT_BADGE[hero.agent ?? 'claude'];
+              return badge ? (
+                <span
+                  className="px"
+                  style={{ marginLeft: 6, fontSize: 10, padding: '1px 6px', borderRadius: 4, background: `${badge.color}33`, color: badge.color, border: `1px solid ${badge.color}66`, verticalAlign: 'middle' }}
+                >
+                  {badge.label}
+                </span>
+              ) : null;
+            })()}
             <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>
               {hero.model ?? t.modelUnknown}
               {hero.gitBranch ? ` · ⎇ ${hero.gitBranch}` : ''}
