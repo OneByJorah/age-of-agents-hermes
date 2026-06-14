@@ -9,7 +9,7 @@ The tool it runs decides which workshop it visits, subagents become workers,
 and tokens fill the storehouse — a calm, Age-of-Empires-style kingdom of your work.
 No combat, just a quiet realm you can watch at a glance.
 
-[![npm](https://img.shields.io/badge/npx-ai--of--agents-6e9b46.svg)](https://www.npmjs.com/package/ai-of-agents)
+[![npm](https://img.shields.io/badge/npx-age--of--agents-6e9b46.svg)](https://www.npmjs.com/package/age-of-agents)
 [![License: MIT](https://img.shields.io/badge/License-MIT-e0b64a.svg)](LICENSE)
 ![Node](https://img.shields.io/badge/node-%E2%89%A522-339933?logo=node.js&logoColor=white)
 ![PixiJS](https://img.shields.io/badge/PixiJS-v8-e91e63)
@@ -24,7 +24,7 @@ No combat, just a quiet realm you can watch at a glance.
 
 ## ✨ What is this?
 
-Age of Agents (npm package **`ai-of-agents`**) runs as a small local web app
+Age of Agents (npm package **`age-of-agents`**) runs as a small local web app
 alongside your normal CLI workflow. It watches your agent session transcripts and
 renders them as a calm, real-time strategy realm:
 
@@ -53,16 +53,16 @@ A glanceable, second-monitor view of what your agents are quietly up to.
 Run it instantly, no install:
 
 ```bash
-npx ai-of-agents          # watches ~/.claude & ~/.codex sessions, prints the URL
-npx ai-of-agents --demo   # calm demo mode (fake sessions)
-npx ai-of-agents --open   # also open the browser
+npx age-of-agents          # watches ~/.claude & ~/.codex sessions, prints the URL
+npx age-of-agents --demo   # calm demo mode (fake sessions)
+npx age-of-agents --open   # also open the browser
 ```
 
-Or install globally (commands `ai-of-agents` and the shorter `aioa`):
+Or install globally (commands `age-of-agents` and the shorter `aoa`):
 
 ```bash
-npm i -g ai-of-agents
-aioa --open
+npm i -g age-of-agents
+aoa --open
 ```
 
 > The server binds to `127.0.0.1` only and never writes your transcripts anywhere — it just reads them locally and broadcasts game state over a local WebSocket. See [Privacy](#-privacy).
@@ -95,7 +95,7 @@ Two full art sets, switchable from the top bar:
 
 ## 🧱 Architecture
 
-A small npm-workspaces monorepo, published as the single `ai-of-agents` CLI:
+A small npm-workspaces monorepo, published as the single `age-of-agents` CLI:
 
 | Package | Stack | Responsibility |
 | --- | --- | --- |

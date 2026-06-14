@@ -21,7 +21,7 @@ describe('startServer', () => {
   });
 
   it('serwuje index.html klienta z webRoot', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'aioa-web-'));
+    const dir = mkdtempSync(join(tmpdir(), 'aoa-web-'));
     writeFileSync(join(dir, 'index.html'), '<!doctype html><title>AIOA-TEST</title>');
     running = await startServer({ port: 0, demo: true, webRoot: dir });
 

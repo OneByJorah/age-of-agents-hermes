@@ -13,11 +13,11 @@ process.on('uncaughtException', (err) => {
   console.error('Nieobsłużony wyjątek — serwer działa dalej:', err);
 });
 
-const HELP = `AI of Agents — wizualizacja sesji Claude Code jako gra RTS.
+const HELP = `Age of Agents — wizualizacja sesji Claude Code jako gra RTS.
 
 Użycie:
-  ai-of-agents [opcje]
-  aioa [opcje]
+  age-of-agents [opcje]
+  aoa [opcje]
 
 Opcje:
   --demo           Tryb demo (sztuczne dane), bez podglądu ~/.claude/projects
@@ -57,7 +57,7 @@ async function main(): Promise<void> {
     try {
       const server = await startServer({ port, demo: opts.demo, webRoot });
       process.stdout.write(
-        `\n  ▸ AI of Agents działa: ${server.url}\n    (Ctrl+C aby zatrzymać)\n\n`,
+        `\n  ▸ Age of Agents działa: ${server.url}\n    (Ctrl+C aby zatrzymać)\n\n`,
       );
       if (opts.open) openBrowser(server.url);
       return;
