@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { spawn } from 'node:child_process';
 import { startServer } from './server.js';
-import { parseArgs } from './cli-args.js';
+import { parseArgs, shouldOpenBrowser } from './cli-args.js';
 
 // Siatka bezpieczeństwa: po starcie pojedynczy nieobsłużony błąd nie może wygasić
 // serwera wizualizacji. Błędy startu i tak lecą do main().catch poniżej.
@@ -19,10 +19,13 @@ Użycie:
   age-of-agents [opcje]
   aoa [opcje]
 
+Domyślnie po starcie otwiera przeglądarkę na widoku gry (pomijane w CI / bez TTY).
+
 Opcje:
   --demo           Tryb demo (sztuczne dane), bez podglądu ~/.claude/projects
   --port, -p <n>   Port HTTP (domyślnie 8123)
-  --open           Otwórz przeglądarkę po starcie
+  --open           Wymuś otwarcie przeglądarki (także w CI / bez TTY)
+  --no-open        Nie otwieraj przeglądarki
   --help, -h       Ta pomoc
 `;
 
@@ -59,7 +62,11 @@ async function main(): Promise<void> {
       process.stdout.write(
         `\n  ▸ Age of Agents działa: ${server.url}\n    (Ctrl+C aby zatrzymać)\n\n`,
       );
-      if (opts.open) openBrowser(server.url);
+      const open = shouldOpenBrowser(opts.open, {
+        ci: Boolean(process.env.CI),
+        isTTY: Boolean(process.stdout.isTTY),
+      });
+      if (open) openBrowser(server.url);
       return;
     } catch (err) {
       const e = err as NodeJS.ErrnoException;

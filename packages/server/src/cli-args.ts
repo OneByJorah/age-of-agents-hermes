@@ -1,9 +1,17 @@
 import { SERVER_PORT } from '@agent-citadel/shared';
 
+/**
+ * Tryb otwierania przeglądarki:
+ *  - 'auto'   — domyślnie: otwórz, jeśli uruchomienie jest interaktywne (nie CI, jest TTY)
+ *  - 'always' — wymuś otwarcie (flaga --open), nawet w CI / bez TTY
+ *  - 'never'  — nie otwieraj (flaga --no-open)
+ */
+export type OpenMode = 'auto' | 'always' | 'never';
+
 export interface CliOptions {
   port: number;
   demo: boolean;
-  open: boolean;
+  open: OpenMode;
   help: boolean;
 }
 
@@ -19,15 +27,30 @@ function parsePort(value: string | undefined): number {
 }
 
 export function parseArgs(argv: string[]): CliOptions {
-  const opts: CliOptions = { port: SERVER_PORT, demo: false, open: false, help: false };
+  const opts: CliOptions = { port: SERVER_PORT, demo: false, open: 'auto', help: false };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--demo') opts.demo = true;
-    else if (arg === '--open') opts.open = true;
+    else if (arg === '--open') opts.open = 'always';
+    else if (arg === '--no-open') opts.open = 'never';
     else if (arg === '--help' || arg === '-h') opts.help = true;
     else if (arg === '--port' || arg === '-p') opts.port = parsePort(argv[++i]);
     else if (arg.startsWith('--port=')) opts.port = parsePort(arg.slice('--port='.length));
     else throw new Error(`Nieznana opcja: ${arg}`);
   }
   return opts;
+}
+
+/**
+ * Czy faktycznie otworzyć przeglądarkę. Czysta decyzja (bez efektów ubocznych) —
+ * środowisko (CI / TTY) wstrzykiwane, by była łatwo testowalna.
+ *
+ * 'auto' otwiera tylko interaktywnie: pomija CI i wyjście nie-terminalowe
+ * (skrypt/pipe/headless), żeby nie zaskakiwać automatów. --open wymusza,
+ * --no-open blokuje.
+ */
+export function shouldOpenBrowser(mode: OpenMode, env: { ci: boolean; isTTY: boolean }): boolean {
+  if (mode === 'never') return false;
+  if (mode === 'always') return true;
+  return !env.ci && env.isTTY;
 }
