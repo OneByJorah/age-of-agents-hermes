@@ -14,7 +14,7 @@ No combat, just a quiet realm you can watch at a glance.
 ![Node](https://img.shields.io/badge/node-%E2%89%A522-339933?logo=node.js&logoColor=white)
 ![PixiJS](https://img.shields.io/badge/PixiJS-v8-e91e63)
 
-[**▶ Live site**](https://agentsmill.github.io/ai-of-agents/) · [Quick start](#-quick-start) · [How it works](#-how-it-works) · [Architecture](#-architecture)
+[**▶ Live site**](https://agentsmill.github.io/age-of-agents/) · [Quick start](#-quick-start) · [How it works](#-how-it-works) · [Architecture](#-architecture)
 
 <img src="docs/screenshots/citadel-fantasy.png" alt="Age of Agents — peaceful fantasy realm" width="820">
 
@@ -70,8 +70,8 @@ aioa --open
 ### From source
 
 ```bash
-git clone https://github.com/agentsmill/ai-of-agents
-cd ai-of-agents && npm install
+git clone https://github.com/agentsmill/age-of-agents
+cd age-of-agents && npm install
 npm run demo     # server (demo) + client (Vite) → http://localhost:5173
 npm run dev      # visualize your real sessions
 ```

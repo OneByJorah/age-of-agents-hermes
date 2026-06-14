@@ -5,13 +5,13 @@
   "type": "module",
   "license": "MIT",
   "author": "Mateusz Pawelczuk",
-  "homepage": "https://agentsmill.github.io/ai-of-agents/",
+  "homepage": "https://agentsmill.github.io/age-of-agents/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/agentsmill/ai-of-agents.git"
+    "url": "https://github.com/agentsmill/age-of-agents.git"
   },
   "bugs": {
-    "url": "https://github.com/agentsmill/ai-of-agents/issues"
+    "url": "https://github.com/agentsmill/age-of-agents/issues"
   },
   "bin": {
     "ai-of-agents": "dist/cli.js",
