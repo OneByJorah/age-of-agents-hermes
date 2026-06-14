@@ -106,6 +106,11 @@ export class Unit {
     return this.path.length > 0;
   }
 
+  /** Bieżący stan (do logiki sceny — np. spacer tylko bezczynnych). */
+  get stateKind(): HeroStateKind {
+    return this.state;
+  }
+
   /** Zaznaczenie z HUD — wtedy dymek roboczy widoczny bez limitu czasu. */
   setBubbleForced(forced: boolean): void {
     this.bubbleForced = forced;

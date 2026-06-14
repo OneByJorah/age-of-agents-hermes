@@ -72,6 +72,8 @@ export class GameView {
   private units = new Map<string, Unit>();
   private retiring = new Map<string, { unit: Unit; deadline: number }>();
   private targets = new Map<string, string>();
+  private lastBuilding = new Map<string, BuildingId>(); // ostatni warsztat — tu jednostka „mieszka", nie w Twierdzy
+  private wanderAt = new Map<string, number>(); // elapsed następnego drobnego spaceru bezczynnego bohatera
   private worldOffset = { x: 0, y: 0 };
   private worldWidth = 0;
   private worldHeight = 0;
@@ -232,6 +234,7 @@ export class GameView {
         unit.setBubbleForced(id === selected);
         unit.update(dt);
       }
+      this.wanderIdle();
       this.updateRetiring(dt);
       this.updateBuildingFx(dt);
       this.updateParticles(dt);
@@ -538,21 +541,44 @@ export class GameView {
     return heroes[peon.parentSessionId]?.teamColor ?? 0;
   }
 
+  /**
+   * Drobny spacer bezczynnych bohaterów wokół ich warsztatu — żeby kolonia ŻYŁA,
+   * a nie zamierała w jednym punkcie. Co 5–10 s bezczynny (nie śpiący/pracujący)
+   * bohater dostaje nową ścieżkę do losowego punktu blisko swojego ostatniego budynku.
+   * Re-steer z reconcile nie przeszkadza: dla 'idle' klucz celu jest stały → no-op.
+   */
+  private wanderIdle(): void {
+    for (const [id, unit] of this.units) {
+      if (unit.isPeon || unit.moving || unit.stateKind !== 'idle') continue;
+      if (this.elapsed < (this.wanderAt.get(id) ?? 0)) continue;
+      this.wanderAt.set(id, this.elapsed + 5 + (hashId(id) % 5)); // 5–10 s, rozsynchronizowane per jednostka
+      const door = this.building(this.lastBuilding.get(id) ?? 'citadel').door;
+      const k = (Math.floor(this.elapsed * 7) + hashId(id)) >>> 0;
+      const angle = (k % 360) * (Math.PI / 180);
+      const radius = 1.2 + (k % 5) * 0.5; // 1.2–3.2 kafla wokół warsztatu
+      const spot = { gx: door.gx + Math.cos(angle) * radius, gy: door.gy + Math.sin(angle) * radius };
+      const route = this.graph.route(this.graph.nearest(unit.gx, unit.gy).id, this.graph.nearest(spot.gx, spot.gy).id);
+      route.push({ id: 'wander', gx: spot.gx, gy: spot.gy });
+      unit.setPath(route);
+    }
+  }
+
   private steer(unit: Unit, state: string, tool?: string, detail?: string, slot = 0): void {
-    // Dom: bohater wraca do Twierdzy, peon (pomocnik) mustruje w Koszarach.
-    const home: BuildingId = unit.isPeon ? 'barracks' : 'citadel';
     let buildingId: BuildingId;
     if (state === 'working') {
       buildingId = toolToBuilding(tool, detail);
-      // Nieznane narzędzie daje fallback 'citadel'. Dla peona to zła stopa: spawnuje
-      // się przy rodzicu (zwykle Twierdza), więc cel=Twierdza ⇒ pusta ścieżka ⇒ stoi.
-      // Kieruj go do Koszar, żeby faktycznie biegł.
+      // Nieznane narzędzie daje fallback 'citadel'. Dla peona to zła stopa: cel=Twierdza
+      // ⇒ pusta ścieżka ⇒ stoi. Kieruj go do Koszar, żeby faktycznie biegł.
       if (buildingId === 'citadel' && unit.isPeon) buildingId = 'barracks';
+      this.lastBuilding.set(unit.id, buildingId); // zapamiętaj warsztat — tu jednostka zostaje między zadaniami
     } else if (!unit.isPeon && (state === 'thinking' || state === 'awaiting-input' || state === 'error')) {
-      this.targets.delete(unit.id); // bohater: zostań gdzie jesteś
+      this.targets.delete(unit.id); // bohater: zostań gdzie jesteś (myśli przy swoim warsztacie)
       return;
     } else {
-      buildingId = home; // peon ZAWSZE ma cel — nie zastyga w stosie przy Twierdzy
+      // idle/sleeping/returning: NIE wracaj do Twierdzy — zostań przy OSTATNIM warsztacie.
+      // Kolonia rozłożona po budynkach żyje; dopiero bez historii pracy → dom domyślny.
+      const fallback: BuildingId = unit.isPeon ? 'barracks' : 'citadel';
+      buildingId = this.lastBuilding.get(unit.id) ?? fallback;
     }
 
     const key = `${state === 'working' ? 'w' : 'home'}:${buildingId}`;
@@ -568,6 +594,13 @@ export class GameView {
     route.push({ id: 'spot', gx: door.gx + spot.dx, gy: door.gy + spot.dy });
     unit.setPath(route);
   }
+}
+
+/** Prosty hash stringa → liczba (seed do rozsynchronizowania spacerów/jittera). */
+function hashId(id: string): number {
+  let h = 0;
+  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return h;
 }
 
 /** Deterministyczny krąg pozycji bezczynnych wokół twierdzy (luźny tłum, nie stos). */
