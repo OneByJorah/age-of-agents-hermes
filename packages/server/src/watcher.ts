@@ -1,10 +1,9 @@
 import { watch, type FSWatcher } from 'chokidar';
-import { homedir } from 'node:os';
-import { basename, join, sep } from 'node:path';
+import { sep } from 'node:path';
 import type { PeonSnapshot } from '@agent-citadel/shared';
-import { interpretLine } from './transcript/parser.js';
 import { TailRegistry } from './transcript/tail.js';
 import { DEFAULT_THRESHOLDS, SessionTracker, type StateThresholds } from './state-machine.js';
+import type { AgentSource, ClassifiedFile } from './sources/types.js';
 import type { World } from './world.js';
 
 /** Sesje starsze niż to okno ignorujemy przy starcie (historia, nie żywe). */
@@ -19,37 +18,44 @@ interface PeonEntry {
 }
 
 /**
- * Obserwuje ~/.claude/projects/**: główne transkrypty sesji (bohaterowie)
- * i transkrypty subagentów w <sesja>/subagents/** (peony).
+ * Obserwuje korzeń(e) jednego źródła (Claude/Codex): główne transkrypty sesji
+ * (bohaterowie) i — jeśli źródło je rozpoznaje — subagentów (peony).
+ * Cała wiedza o lokalizacji i formacie pochodzi z AgentSource.
  */
-export class TranscriptWatcher {
+export class SourceWatcher {
   private tails = new TailRegistry();
   private trackers = new Map<string, SessionTracker>();
   private peons = new Map<string, PeonEntry>();
   private watcher?: FSWatcher;
   private sweepTimer?: NodeJS.Timeout;
   private queue = Promise.resolve();
+  private readonly roots: string[];
 
   constructor(
     private readonly world: World,
-    private readonly root = join(homedir(), '.claude', 'projects'),
+    private readonly source: AgentSource,
     private readonly thresholds: StateThresholds = DEFAULT_THRESHOLDS,
-  ) {}
+  ) {
+    this.roots = source.roots();
+  }
+
+  get id() {
+    return this.source.id;
+  }
 
   start(): void {
-    this.watcher = watch(this.root, {
-      depth: 6,
+    this.watcher = watch(this.roots, {
+      depth: this.source.depth ?? 6,
       ignoreInitial: false,
       alwaysStat: true,
-      // Ignorujemy wyłącznie POTWIERDZONE pliki bez .jsonl — gdy chokidar
-      // woła bez stats (katalogi przy skanie), nie wolno ignorować, bo
-      // odetniemy traversal całego drzewa.
+      // Ignorujemy tylko POTWIERDZONE pliki bez .jsonl (bez stats nie wolno —
+      // ucięlibyśmy traversal drzewa).
       ignored: (path, stats) => stats?.isFile() === true && !path.endsWith('.jsonl'),
     });
     const enqueue = (path: string, stats?: { mtimeMs?: number; size?: number }, initial = false) => {
       this.queue = this.queue
         .then(() => this.handleFile(path, stats, initial))
-        .catch((err) => console.error('[watcher]', path, err));
+        .catch((err) => console.error('[watcher]', this.source.id, path, err));
     };
     this.watcher.on('add', (path, stats) => enqueue(path, stats, true));
     this.watcher.on('change', (path, stats) => enqueue(path, stats, false));
@@ -65,26 +71,20 @@ export class TranscriptWatcher {
   applyExternalFacts(sessionId: string, projectDir: string, facts: import('./transcript/facts.js').Fact[]): void {
     let tracker = this.trackers.get(sessionId);
     if (!tracker) {
-      tracker = new SessionTracker(this.world, sessionId, projectDir, this.thresholds);
+      tracker = new SessionTracker(this.world, sessionId, projectDir, this.thresholds, this.source.id);
       this.trackers.set(sessionId, tracker);
     }
     for (const fact of facts) tracker.apply(fact);
   }
 
-  private classify(path: string): { kind: 'session'; sessionId: string; projectDir: string }
-    | { kind: 'subagent'; agentId: string; parentSessionId: string }
-    | { kind: 'other' } {
-    const rel = path.slice(this.root.length + 1);
-    const parts = rel.split(sep);
-    const file = basename(path, '.jsonl');
-    if (parts.length === 2) {
-      return { kind: 'session', sessionId: file, projectDir: parts[0] };
-    }
-    if (parts.includes('subagents') && basename(path).startsWith('agent-')) {
-      // <proj>/<sessionUuid>/subagents/**/agent-<id>.jsonl
-      return { kind: 'subagent', agentId: file.replace(/^agent-/, ''), parentSessionId: parts[1] };
-    }
-    return { kind: 'other' };
+  private rootFor(path: string): string | undefined {
+    return this.roots.find((r) => path === r || path.startsWith(r + sep));
+  }
+
+  private classify(path: string): ClassifiedFile {
+    const root = this.rootFor(path);
+    if (!root) return { kind: 'other' };
+    return this.source.classify(path, root);
   }
 
   private async handleFile(
@@ -106,16 +106,17 @@ export class TranscriptWatcher {
     if (lines.length === 0) return;
 
     if (target.kind === 'session') {
-      let tracker = this.trackers.get(target.sessionId);
+      const sessionId = target.sessionId!;
+      let tracker = this.trackers.get(sessionId);
       if (!tracker) {
-        tracker = new SessionTracker(this.world, target.sessionId, target.projectDir, this.thresholds);
-        this.trackers.set(target.sessionId, tracker);
+        tracker = new SessionTracker(this.world, sessionId, target.projectDir ?? '', this.thresholds, this.source.id);
+        this.trackers.set(sessionId, tracker);
       }
       for (const line of lines) {
-        for (const fact of interpretLine(line)) tracker.apply(fact);
+        for (const fact of this.source.parseLine(line)) tracker.apply(fact);
       }
     } else {
-      this.applyPeonLines(target.agentId, target.parentSessionId, lines);
+      this.applyPeonLines(target.agentId!, target.parentSessionId!, lines);
     }
   }
 
@@ -131,7 +132,7 @@ export class TranscriptWatcher {
     entry.lastWriteMs = Date.now();
 
     for (const line of lines) {
-      for (const fact of interpretLine(line)) {
+      for (const fact of this.source.parseLine(line)) {
         if (fact.kind === 'tool-start') {
           entry.peon = { ...entry.peon, state: 'working', currentTool: fact.tool, description: fact.detail ?? entry.peon.description };
         } else if (fact.kind === 'thinking') {
