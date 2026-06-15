@@ -19,9 +19,12 @@ interface WorldStore {
   notifications: Notification[];
   selectedSessionId?: string;
   selectedBuildingId?: string;
+  /** Czy kamera ma śledzić wybranego bohatera (opt-in per agent; reset przy zmianie zaznaczenia). */
+  autofollow: boolean;
   setConnected(connected: boolean): void;
   select(sessionId?: string): void;
   selectBuilding(buildingId?: string): void;
+  setAutofollow(on: boolean): void;
   dismissNotification(id: string): void;
   apply(event: GameEvent): void;
 }
@@ -45,10 +48,13 @@ export const useWorld = create<WorldStore>((set) => ({
   missions: {},
   transcripts: {},
   notifications: [],
+  autofollow: false,
   setConnected: (connected) => set({ connected }),
   // Wybór jednostki i budynku wzajemnie się wykluczają (jeden panel po prawej).
-  select: (selectedSessionId) => set({ selectedSessionId, selectedBuildingId: undefined }),
-  selectBuilding: (selectedBuildingId) => set({ selectedBuildingId, selectedSessionId: undefined }),
+  // Zmiana zaznaczenia zeruje autofollow — to opt-in per agent, nie globalny tryb.
+  select: (selectedSessionId) => set({ selectedSessionId, selectedBuildingId: undefined, autofollow: false }),
+  selectBuilding: (selectedBuildingId) => set({ selectedBuildingId, selectedSessionId: undefined, autofollow: false }),
+  setAutofollow: (autofollow) => set({ autofollow }),
   dismissNotification: (id) =>
     set((state) => ({ notifications: state.notifications.filter((n) => n.id !== id) })),
   apply: (event) =>
