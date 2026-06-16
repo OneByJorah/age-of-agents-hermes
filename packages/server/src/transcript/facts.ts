@@ -14,4 +14,5 @@ export type Fact =
   | { kind: 'usage-total'; input: number; output: number }
   | { kind: 'turn-end'; ts: string }
   | { kind: 'tool-result'; isError: boolean; ts: string }
+  | { kind: 'attribution'; skill?: string; plugin?: string; mcpServer?: string }
   | { kind: 'awaiting'; ts: string };
