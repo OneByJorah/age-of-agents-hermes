@@ -107,6 +107,21 @@ describe('interpretLine', () => {
     expect(isHumanPrompt('<system-reminder>x</system-reminder>')).toBe(false);
   });
 
+  it('wyciąga atrybucję skilla/pluginu/mcp z rekordu assistant', () => {
+    const line = JSON.stringify({
+      type: 'assistant',
+      timestamp: '2026-06-17T10:00:00.000Z',
+      attributionSkill: 'superpowers:brainstorming',
+      attributionPlugin: 'superpowers',
+      attributionMcpServer: 'visualize',
+      message: { id: 'm1', content: [] },
+    });
+    const facts = interpretLine(line);
+    expect(facts).toContainEqual({
+      kind: 'attribution', skill: 'superpowers:brainstorming', plugin: 'superpowers', mcpServer: 'visualize',
+    });
+  });
+
   it('skraca bardzo długie prompty', () => {
     const line = JSON.stringify({
       type: 'queue-operation',

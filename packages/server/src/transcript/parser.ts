@@ -107,6 +107,19 @@ export function interpretLine(line: string): Fact[] {
         cwd: typeof record.cwd === 'string' ? record.cwd : undefined,
       });
 
+      if (
+        typeof record.attributionSkill === 'string' ||
+        typeof record.attributionPlugin === 'string' ||
+        typeof record.attributionMcpServer === 'string'
+      ) {
+        facts.push({
+          kind: 'attribution',
+          skill: typeof record.attributionSkill === 'string' ? record.attributionSkill : undefined,
+          plugin: typeof record.attributionPlugin === 'string' ? record.attributionPlugin : undefined,
+          mcpServer: typeof record.attributionMcpServer === 'string' ? record.attributionMcpServer : undefined,
+        });
+      }
+
       const usage = message.usage;
       if (usage && typeof usage === 'object') {
         facts.push({
