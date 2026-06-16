@@ -393,6 +393,34 @@ const BUILDINGS: Record<ThemeId, Record<BuildingId, Record<Lang, BuildingText>>>
         desc: 'Un angolo tranquillo per le sessioni che hanno appena finito il loro lavoro — tornano qui per stare con gli altri compagni di progetto che hanno concluso.',
       },
     },
+    bar: {
+      en: {
+        label: 'Bar',
+        desc: 'A lively social spot for sessions that want to discuss or pair up — they gather here with project-mates to share notes and brainstorm together.',
+      },
+      pl: {
+        label: 'Bar',
+        desc: 'Tętniące życiem miejsce towarzyskie dla sesji, które chcą dyskutować lub pracować w parach — zbierają się tu ze współtowarzyszami z projektu, by dzielić się notatkami i burzą mózgów.',
+      },
+      it: {
+        label: 'Bar',
+        desc: 'Un punto di ritrovo vivace per le sessioni che vogliono discutere o lavorare in coppia — si radunano qui con i compagni di progetto per condividere appunti e fare brainstorming.',
+      },
+    },
+    shrine: {
+      en: {
+        label: 'Shrine',
+        desc: 'A quiet contemplative spot for sessions deep in thought — they come here to focus alone, away from the bustle of the other gathering places.',
+      },
+      pl: {
+        label: 'Świątynia',
+        desc: 'Ciche, kontemplacyjne miejsce dla sesji pogrążonych w myślach — przychodzą tu, by skupić się w samotności, z dala od zgiełku innych punktów zbiórki.',
+      },
+      it: {
+        label: 'Santuario',
+        desc: 'Un angolo silenzioso e contemplativo per le sessioni immerse nei loro pensieri — vengono qui per concentrarsi in solitudine, lontano dal trambusto degli altri punti di ritrovo.',
+      },
+    },
     // I seguenti 3 building esistono solo nel tema sci-fi: in fantasy
     // il type Record<BuildingId, ...> li richiede comunque (etichette
     // placeholder, non vengono mai mostrati).
@@ -410,6 +438,17 @@ const BUILDINGS: Record<ThemeId, Record<BuildingId, Record<Lang, BuildingText>>>
       en: { label: 'Hydroponics', desc: 'Sci-fi gathering point.' },
       pl: { label: 'Hydroponika', desc: 'Punkt zbiórki sci-fi.' },
       it: { label: 'Idroponica', desc: 'Punto di raccolta sci-fi.' },
+    },
+    // Anche lounge/medbay sono solo sci-fi (bar/shrine sono nel blocco fantasy sopra).
+    lounge: {
+      en: { label: 'Lounge', desc: 'Sci-fi gathering point.' },
+      pl: { label: 'Salon', desc: 'Punkt zbiórki sci-fi.' },
+      it: { label: 'Salotto', desc: 'Punto di raccolta sci-fi.' },
+    },
+    medbay: {
+      en: { label: 'Medbay', desc: 'Sci-fi gathering point.' },
+      pl: { label: 'Ambulatorium', desc: 'Punkt zbiórki sci-fi.' },
+      it: { label: 'Infermeria', desc: 'Punto di raccolta sci-fi.' },
     },
   },
   scifi: {
@@ -567,6 +606,34 @@ const BUILDINGS: Record<ThemeId, Record<BuildingId, Record<Lang, BuildingText>>>
         desc: 'Un angolo tranquillo per le sessioni che hanno appena finito il loro lavoro — tornano qui per stare con gli altri compagni di progetto che hanno concluso.',
       },
     },
+    lounge: {
+      en: {
+        label: 'Lounge',
+        desc: 'A social space for sessions that want to discuss or pair up — they gather here with project-mates to share notes and brainstorm together.',
+      },
+      pl: {
+        label: 'Salon',
+        desc: 'Przestrzeń towarzyska dla sesji, które chcą dyskutować lub pracować w parach — zbierają się tu ze współtowarzyszami z projektu, by dzielić się notatkami i burzą mózgów.',
+      },
+      it: {
+        label: 'Salotto',
+        desc: 'Uno spazio sociale per le sessioni che vogliono discutere o lavorare in coppia — si radunano qui con i compagni di progetto per condividere appunti e fare brainstorming.',
+      },
+    },
+    medbay: {
+      en: {
+        label: 'Medbay',
+        desc: 'A recovery bay for sessions that hit an error or are stuck — they rest here with project-mates until they’re ready to try again.',
+      },
+      pl: {
+        label: 'Ambulatorium',
+        desc: 'Strefa regeneracji dla sesji, które napotkały błąd lub utknęły — odpoczywają tu ze współtowarzyszami z projektu, aż będą gotowe, by spróbować ponownie.',
+      },
+      it: {
+        label: 'Infermeria',
+        desc: 'Un\'area di recupero per le sessioni che hanno incontrato un errore o sono bloccate — riposano qui con i compagni di progetto finché non sono pronte a riprovare.',
+      },
+    },
     // Questi 3 building esistono solo nel tema fantasy: in sci-fi il type
     // Record<BuildingId, ...> li richiede comunque (placeholder, mai mostrati).
     arena: {
@@ -583,6 +650,16 @@ const BUILDINGS: Record<ThemeId, Record<BuildingId, Record<Lang, BuildingText>>>
       en: { label: 'Garden', desc: 'Fantasy gathering point.' },
       pl: { label: 'Ogród', desc: 'Punkt zbiórki fantasy.' },
       it: { label: 'Giardino', desc: 'Punto di raccolta fantasy.' },
+    },
+    bar: {
+      en: { label: 'Bar', desc: 'Fantasy gathering point.' },
+      pl: { label: 'Bar', desc: 'Punkt zbiórki fantasy.' },
+      it: { label: 'Bar', desc: 'Punto di raccolta fantasy.' },
+    },
+    shrine: {
+      en: { label: 'Shrine', desc: 'Fantasy gathering point.' },
+      pl: { label: 'Świątynia', desc: 'Punkt zbiórki fantasy.' },
+      it: { label: 'Santuario', desc: 'Punto di raccolta fantasy.' },
     },
   },
 };

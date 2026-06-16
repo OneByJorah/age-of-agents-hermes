@@ -110,9 +110,13 @@ export type BuildingId =
   | 'arena'
   | 'tavern'
   | 'garden'
+  | 'bar'
+  | 'shrine'
   | 'holodeck'
   | 'mess'
-  | 'hydroponics';
+  | 'hydroponics'
+  | 'lounge'
+  | 'medbay';
 
 const TOOL_BUILDING: Record<string, BuildingId> = {
   WebSearch: 'tower',

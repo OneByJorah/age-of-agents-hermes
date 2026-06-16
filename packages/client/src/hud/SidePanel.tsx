@@ -37,9 +37,13 @@ const BUILDING_EMOJI: Record<BuildingId, string> = {
   arena: '⚔️',
   tavern: '🍺',
   garden: '🌿',
+  bar: '🍷',
+  shrine: '⛩',
   holodeck: '🎮',
   mess: '🍽️',
   hydroponics: '🌱',
+  lounge: '🛋',
+  medbay: '⚕️',
 };
 
 /** Etykieta + kolor odznaki agenta w panelu. */

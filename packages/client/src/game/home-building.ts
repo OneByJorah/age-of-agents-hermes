@@ -14,8 +14,8 @@ import type { ThemeDef } from '../theme/types';
  * deterministica e non dipende dall'ordine di arrivo.
  */
 const HOME_BUILDINGS: Record<string, BuildingId[]> = {
-  fantasy: ['arena', 'tavern', 'garden'],
-  scifi: ['holodeck', 'mess', 'hydroponics'],
+  fantasy: ['arena', 'tavern', 'garden', 'bar', 'shrine'],
+  scifi: ['holodeck', 'mess', 'hydroponics', 'lounge', 'medbay'],
 };
 
 /** djb2 — veloce, deterministico, sufficiente per spalmare 100+ progetti. */
