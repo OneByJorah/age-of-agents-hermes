@@ -52,6 +52,12 @@ export interface UiStrings {
   notifJump: string;
   autofollow: string;
   autofollowHint: string;
+  cities: string;
+  agents: string;
+  allCities: string;
+  symbols: string;
+  edges: string;
+  communities: string;
 }
 
 const EN: UiStrings = {
@@ -108,6 +114,12 @@ const EN: UiStrings = {
   notifJump: 'click to jump',
   autofollow: 'Follow',
   autofollowHint: 'Camera follows this hero',
+  cities: 'CITIES',
+  agents: 'agents',
+  allCities: 'All',
+  symbols: 'Symbols',
+  edges: 'Edges',
+  communities: 'Communities',
 };
 
 const PL: UiStrings = {
@@ -164,6 +176,12 @@ const PL: UiStrings = {
   notifJump: 'kliknij, by skoczyć',
   autofollow: 'Podążaj',
   autofollowHint: 'Kamera podąża za bohaterem',
+  cities: 'MIASTA',
+  agents: 'agentów',
+  allCities: 'Wszystkie',
+  symbols: 'Symbole',
+  edges: 'Krawędzie',
+  communities: 'Społeczności',
 };
 
 const IT: UiStrings = {
@@ -220,6 +238,12 @@ const IT: UiStrings = {
   notifJump: 'clicca per saltare',
   autofollow: 'Segui',
   autofollowHint: 'La telecamera segue questo eroe',
+  cities: 'CITTÀ',
+  agents: 'agenti',
+  allCities: 'Tutte',
+  symbols: 'Simboli',
+  edges: 'Archi',
+  communities: 'Comunità',
 };
 
 const UI: Record<Lang, UiStrings> = { en: EN, pl: PL, it: IT };

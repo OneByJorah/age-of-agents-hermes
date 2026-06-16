@@ -275,6 +275,7 @@ function IssueRow({ issue }: { issue: BeadsIssue }) {
 }
 
 function GraphifyView({ g }: { g: ProjectIntel['graphify'] }) {
+  const t = useUi();
   if (!g.available || !g.summary) {
     return (
       <div style={{ padding: 12, fontSize: 12, color: '#a8a69d' }}>
@@ -290,9 +291,9 @@ function GraphifyView({ g }: { g: ProjectIntel['graphify'] }) {
   const s: GraphifySummary = g.summary;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 11, color: '#f1efe8' }}>
-      <Stat label="Symbols" value={s.nodeCount.toLocaleString()} />
-      <Stat label="Edges" value={s.edgeCount.toLocaleString()} />
-      <Stat label="Communities" value={s.communityCount.toLocaleString()} />
+      <Stat label={t.symbols} value={s.nodeCount.toLocaleString()} />
+      <Stat label={t.edges} value={s.edgeCount.toLocaleString()} />
+      <Stat label={t.communities} value={s.communityCount.toLocaleString()} />
       {s.topHubs.length > 0 && (
         <div style={{ marginTop: 4 }}>
           <div style={{ fontSize: 10, color: '#a8a69d', marginBottom: 4 }}>TOP HUBS (god-nodes)</div>
