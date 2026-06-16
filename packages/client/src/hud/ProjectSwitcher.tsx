@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useWorld } from '../store';
+import { useUi } from '../i18n';
 import type { AgentKind, HeroStateKind } from '@agent-citadel/shared';
 
 const AGENT_BADGE: Record<AgentKind, { label: string; color: string } | undefined> = {
@@ -136,6 +137,7 @@ export function ProjectSwitcher() {
 }
 
 function Header({ total, cities }: { total: number; cities: number }) {
+  const t = useUi();
   return (
     <div
       style={{
@@ -152,9 +154,9 @@ function Header({ total, cities }: { total: number; cities: number }) {
     >
       <span style={{ fontSize: 18 }}>🏙️</span>
       <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
-        <span style={{ fontSize: 12, color: '#a8a69d' }}>CITTÀ</span>
+        <span style={{ fontSize: 12, color: '#a8a69d' }}>{t.cities}</span>
         <span style={{ fontSize: 11 }}>
-          {cities} <span style={{ color: '#a8a69d' }}>· {total} agenti</span>
+          {cities} <span style={{ color: '#a8a69d' }}>· {total} {t.agents}</span>
         </span>
       </div>
     </div>
@@ -166,6 +168,7 @@ function Divider() {
 }
 
 function AllTab({ active, onClick, count }: { active: boolean; onClick: () => void; count: number }) {
+  const t = useUi();
   return (
     <button
       onClick={onClick}
@@ -186,7 +189,7 @@ function AllTab({ active, onClick, count }: { active: boolean; onClick: () => vo
       }}
     >
       <span style={{ fontSize: 16 }}>🌍</span>
-      <span>All</span>
+      <span>{t.allCities}</span>
       <span
         style={{
           background: active ? '#5dcaa5' : '#3a3a36',
