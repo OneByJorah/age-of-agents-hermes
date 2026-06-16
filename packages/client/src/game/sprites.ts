@@ -10,16 +10,15 @@ let currentTheme = '';
  * (Faza 2 zamieni to na leniwe ładowanie per-archetyp obecny na mapie.)
  * Brak index.json / pojedynczego atlasu → cicho zostawiamy fallback placeholdera.
  *
- * WAŻNE: Pixi 8 ma Assets.cache interna z URL → zasób. Przy zmianie tematu
- * musimy unloadować klucze starego tematu, bo Pixi pamięta je po URL i mógłby
- * odpowiedzieć starą wersją (albo po prostu zwrócić undefined dla nowego
- * tematu, jeśli parsowanie w spritesheet.load się wywaliło wcześniej).
+ * CRITICAL: Pixi 8's Assets cache is keyed by alias. To support theme switching
+ * without cache collisions, we use theme-specific aliases (e.g. "fantasy/hero/fable"
+ * vs "scifi/hero/fable"). Both can coexist in cache. We do NOT unload the old
+ * theme's cache entries — leaving them is harmless and avoids the risk that
+ * unloading a Spritesheet invalidates base textures still referenced by
+ * AnimatedSprites that haven't been destroyed yet.
  */
 export async function loadThemeSprites(themeId: string): Promise<void> {
-  // Najpierw wyrzuć z cache Pixi wszystko co dotyczy starego tematu.
-  if (currentTheme && currentTheme !== themeId) {
-    await unloadTheme(currentTheme);
-  }
+  if (themeId === currentTheme) return; // già caricato
   heroSheets.clear();
   peonSheet = null;
   currentTheme = themeId;
@@ -39,7 +38,9 @@ export async function loadThemeSprites(themeId: string): Promise<void> {
   }
   for (const key of index.keys) {
     try {
-      const sheet = await Assets.load<Spritesheet>({ alias: `${themeId}/hero/${key}`, src: `${base}/${key}.json` });
+      // Alias includes themeId to prevent cross-theme cache collisions in Pixi 8.
+      const alias = `${themeId}/${key}`;
+      const sheet = await Assets.load<Spritesheet>({ alias, src: `${base}/${key}.json` });
       if (sheet) {
         heroSheets.set(key, sheet);
         console.log(`[heroes]   ✓ ${key} loaded: ${Object.keys(sheet.animations).join(',')}`);
@@ -52,33 +53,8 @@ export async function loadThemeSprites(themeId: string): Promise<void> {
   }
 }
 
-/** Wymusza usunięcie assetów starego tematu z cache Pixi. */
-async function unloadTheme(themeId: string): Promise<void> {
-  const bases = [
-    `/assets/${themeId}/heroes`,
-    `/assets/${themeId}/buildings`,
-    `/assets/${themeId}/decorations`,
-    `/assets/${themeId}/tilemap-iso`,
-    `/assets/${themeId}/tilemap`,
-  ];
-  for (const base of bases) {
-    try {
-      // indeksów nie da się unloadować (nie są w cache Pixi), tylko assety
-      const idx = await fetch(`${base}/index.json`);
-      if (!idx.ok) continue;
-      const data = await idx.json();
-      const items: string[] = data.keys ?? data.ids ?? [];
-      for (const k of items) {
-        const url = `${base}/${k}.${themeId === 'tilemap' || themeId === 'tilemap-iso' ? 'png' : 'json'}`;
-        try { await Assets.unload(url); } catch { /* ignore */ }
-      }
-    } catch { /* ignore */ }
-  }
-  // Aliasy bohaterów
-  for (const key of heroSheets.keys()) {
-    try { await Assets.unload(`${themeId}/hero/${key}`); } catch { /* ignore */ }
-  }
-}
+// NOTE: Per-theme aliases prevent Pixi 8 cache collisions without explicit unload.
+// Old theme entries remain in cache harmlessly. See loadThemeSprites docstring.
 
 /**
  * Spritesheet bohatera dla klucza archetypu. Degraduje brakujący wariant trybu do
