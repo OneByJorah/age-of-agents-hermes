@@ -73,6 +73,9 @@ export interface WorldSnapshot {
   heroes: HeroSnapshot[];
   peons: PeonSnapshot[];
   missions: MissionSnapshot[];
+  /** Katalog uruchomienia serwera (cwd) — „miasto domowe". Pozwala pokazać beady/graphify
+   *  projektu nawet gdy NIE ma w nim aktywnego bohatera. Undefined w trybie demo. */
+  homeProjectDir?: string;
 }
 
 /** Linia transkryptu do panelu bocznego (skrót, nie pełna treść). */

@@ -177,9 +177,11 @@ export class ProjectIntelPoller {
   private timer?: NodeJS.Timeout;
   private isRunning = false;
   private world: World;
+  private readonly homeDir?: string;
 
-  constructor(world: World) {
+  constructor(world: World, homeDir?: string) {
     this.world = world;
+    this.homeDir = homeDir;
   }
 
   start(): void {
@@ -200,6 +202,9 @@ export class ProjectIntelPoller {
     if (!this.isRunning) return;
     // 1. Zbierz unikalne katalogi z aktywnych bohaterów.
     const projectDirs = this.world.activeProjectDirs();
+    // „Miasto domowe": zawsze pollujemy katalog uruchomienia serwera, nawet bez bohatera —
+    // beady/graphify projektu są wtedy widoczne od razu po odpaleniu gry (bo7).
+    if (this.homeDir && !projectDirs.includes(this.homeDir)) projectDirs.push(this.homeDir);
     // 2. Dla każdego: czytaj beads + graphify, emituj event jeśli fingerprint się zmienił.
     for (const dir of projectDirs) {
       try {
