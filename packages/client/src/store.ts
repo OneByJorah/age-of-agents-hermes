@@ -34,6 +34,8 @@ interface WorldStore {
    * mapa filtruje agentów po projectDir.
    */
   selectedProjectDir?: string;
+  /** Katalog uruchomienia serwera („miasto domowe") — beady/graphify bez aktywnej sesji (bo7). */
+  homeProjectDir?: string;
   setConnected(connected: boolean): void;
   select(sessionId?: string): void;
   selectBuilding(buildingId?: string): void;
@@ -87,6 +89,7 @@ export const useWorld = create<WorldStore>((set) => ({
             heroes: Object.fromEntries(event.heroes.map((h) => [h.sessionId, h])),
             peons: Object.fromEntries(event.peons.map((p) => [p.agentId, p])),
             missions: Object.fromEntries(event.missions.map((m) => [m.id, m])),
+            homeProjectDir: event.homeProjectDir,
           };
         case 'hero-spawned':
         case 'hero-updated': {

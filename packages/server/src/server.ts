@@ -25,6 +25,9 @@ export async function startServer(opts: StartServerOptions): Promise<RunningServ
   const host = opts.host ?? '127.0.0.1';
   const app = Fastify({ logger: { level: 'info' } });
   const world = new World();
+  // Katalog uruchomienia = „miasto domowe": pozwala pokazać beady/graphify projektu
+  // nawet bez aktywnego bohatera. W trybie demo bez znaczenia (brak realnego repo).
+  const homeProjectDir = opts.demo ? undefined : process.cwd();
 
   app.get('/health', async () => ({ ok: true, demo: opts.demo }));
 
@@ -67,7 +70,7 @@ export async function startServer(opts: StartServerOptions): Promise<RunningServ
       // Polluje `.beads/issues.jsonl` i `graphify-out/graph.json` dla każdego
       // katalogu projektu, w którym aktywne są sesje agentów — emituje
       // `project-intel-updated` event do klienta (panel "Salonu Architekta").
-      new ProjectIntelPoller(world).start();
+      new ProjectIntelPoller(world, homeProjectDir).start();
       app.log.info(`Source watchers active: ${watchers.map((w) => w.id).join(', ')}`);
     });
   }
@@ -103,7 +106,7 @@ export async function startServer(opts: StartServerOptions): Promise<RunningServ
   };
 
   wss.on('connection', (socket) => {
-    send(socket, { type: 'snapshot', ...world.snapshot() });
+    send(socket, { type: 'snapshot', ...world.snapshot(), homeProjectDir });
   });
   const offEvent = world.onEvent((event) => {
     for (const socket of wss.clients) send(socket, event);

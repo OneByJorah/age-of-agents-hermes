@@ -55,6 +55,8 @@ interface CityInfo {
   count: number;
   agents: Set<AgentKind>;
   states: Map<HeroStateKind, number>;
+  /** „Miasto domowe" (katalog uruchomienia, 0 sesji) — pokazane tylko gdy ma realne dane intel. */
+  isHome?: boolean;
 }
 
 /**
@@ -75,6 +77,8 @@ export function ProjectSwitcher() {
   const selected = useWorld((s) => s.selectedProjectDir);
   const selectProject = useWorld((s) => s.selectProject);
   const connected = useWorld((s) => s.connected);
+  const homeProjectDir = useWorld((s) => s.homeProjectDir);
+  const homeIntel = useWorld((s) => (s.homeProjectDir ? s.projectIntel[s.homeProjectDir] : undefined));
   const t = useUi();
 
   const [open, setOpen] = useState(false);
@@ -104,6 +108,23 @@ export function ProjectSwitcher() {
     return acc;
   }, [heroes]);
 
+  // „Miasto domowe" (bo7): katalog uruchomienia jako miasto z 0 sesji, TYLKO gdy
+  //  (a) żaden bohater nie pracuje już w tym projekcie (workingDir === homeProjectDir → byłby duplikat),
+  //  (b) są realne dane intel (beady LUB graphify dostępne) — opt-in, bez śmiecenia HUD.
+  const homeCity = useMemo<CityInfo | null>(() => {
+    if (!homeProjectDir || !homeIntel) return null;
+    if (Object.values(heroes).some((h) => h.workingDir === homeProjectDir)) return null;
+    if (!homeIntel.beads.available && !homeIntel.graphify.available) return null;
+    return {
+      dir: homeProjectDir,
+      name: homeIntel.projectName || prettifyName(homeProjectDir, homeProjectDir),
+      count: 0,
+      agents: new Set(),
+      states: new Map(),
+      isHome: true,
+    };
+  }, [homeProjectDir, homeIntel, heroes]);
+
   // Zamknij dropdown po kliknięciu poza panelem lub naciśnięciu Esc.
   useEffect(() => {
     if (!open) return;
@@ -131,10 +152,12 @@ export function ProjectSwitcher() {
     // Reset TYLKO gdy realnie połączeni i świat NIE jest pusty. Pusty snapshot przy
     // reconnekcie/restarcie serwera ≠ „miasto skończyło pracę" — inaczej wybór gubiłby się
     // bezpowrotnie przy każdym restarcie dev-servera.
-    if (connected && Object.keys(heroes).length > 0 && selected !== undefined && !cities.has(selected)) {
+    const selectable = new Set<string>(cities.keys());
+    if (homeCity) selectable.add(homeCity.dir); // miasto domowe też jest „prawdziwym" wyborem
+    if (connected && Object.keys(heroes).length > 0 && selected !== undefined && !selectable.has(selected)) {
       selectProject(undefined);
     }
-  }, [connected, heroes, selected, cities, selectProject]);
+  }, [connected, heroes, selected, cities, homeCity, selectProject]);
 
   // Nawigacja klawiaturą wewnątrz rozwiniętej listy (ArrowUp/Down/Home/End + focus po otwarciu).
   useMenuKeyboard(open, menuRef);
@@ -144,11 +167,14 @@ export function ProjectSwitcher() {
   // Sortuj malejąco po aktywnych sesjach, potem alfabetycznie.
   activeCities.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 
-  if (activeCities.length === 0) return null; // brak agentów = brak paska (czysty widok)
+  // Lista wyświetlana = miasta z sesjami + (opcjonalnie) miasto domowe na końcu.
+  const displayCities = homeCity ? [...activeCities, homeCity] : activeCities;
+
+  if (displayCities.length === 0) return null; // brak miast i brak intelu domowego = czysty widok
 
   const totalSessions = activeCities.reduce((sum, c) => sum + c.count, 0);
-  // Wybrane miasto (jeśli istnieje i wciąż aktywne); inaczej trigger pokaże „All".
-  const selectedCity = selected !== undefined ? activeCities.find((c) => c.dir === selected) : undefined;
+  // Wybrane miasto (z sesją lub domowe); inaczej trigger pokaże „All".
+  const selectedCity = selected !== undefined ? displayCities.find((c) => c.dir === selected) : undefined;
 
   const choose = (dir?: string) => {
     selectProject(dir);
@@ -202,7 +228,7 @@ export function ProjectSwitcher() {
             </>
           ) : (
             <>
-              <span style={{ fontSize: 15 }}>🏛️</span>
+              <span style={{ fontSize: 15 }}>{selectedCity?.isHome ? '🏠' : '🏛️'}</span>
               <span style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {selectedCity ? selectedCity.name : prettifyName(selected, selected)}
               </span>
@@ -236,10 +262,10 @@ export function ProjectSwitcher() {
             onClick={() => choose(undefined)}
           />
           <div role="none" style={{ height: 2, background: '#3a3a36' }} />
-          {activeCities.map((city) => (
+          {displayCities.map((city) => (
             <OptionRow
               key={city.dir}
-              icon="🏛️"
+              icon={city.isHome ? '🏠' : '🏛️'}
               label={city.name}
               title={city.dir}
               count={city.count}
