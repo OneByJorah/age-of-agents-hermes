@@ -192,28 +192,30 @@ const ISSUE_TYPE_ICON: Record<string, string> = {
   chore: '🧹',
 };
 
+function BeadsEmpty({ icon, color, title, hint, cmd }: { icon: string; color: string; title: string; hint?: string; cmd: string }) {
+  return (
+    <div style={{ padding: 12, fontSize: 12, color: '#a8a69d', textAlign: 'center' }}>
+      <div style={{ fontSize: 20, marginBottom: 4 }}>{icon}</div>
+      <div style={{ color }}>{title}</div>
+      {hint && <div style={{ fontSize: 10, marginTop: 4, color: '#6b6a63' }}>{hint}</div>}
+      <pre style={{ fontSize: 10, color: '#6b6a63', marginTop: 8, whiteSpace: 'pre-wrap', textAlign: 'left' }}>{cmd}</pre>
+    </div>
+  );
+}
+
 function BeadsView({ beads }: { beads: ProjectIntel['beads'] }) {
+  // Trzy rozróżnione stany „pusto" (reason ze servera; fallback na !available dla starych danych):
   if (!beads.available) {
-    return (
-      <div style={{ padding: 12, fontSize: 12, color: '#a8a69d' }}>
-        <div style={{ fontSize: 20, marginBottom: 4 }}>📜</div>
-        <div style={{ color: '#f09595' }}>Beads not initialized</div>
-        <div style={{ fontSize: 10, marginTop: 4, color: '#6b6a63' }}>{beads.error}</div>
-        <pre style={{ fontSize: 10, color: '#6b6a63', marginTop: 8, whiteSpace: 'pre-wrap' }}>
-          {`Run in this project:\n  cd ${beads.error ? '…' : ''}\n  bd init`}
-        </pre>
-      </div>
-    );
+    // brak katalogu .beads (lub błąd źródła) → projekt nie ma jeszcze beadów
+    return <BeadsEmpty icon="📜" color="#f09595" title="Beads not initialized" hint={beads.error} cmd={'Run in this project:\n  bd init'} />;
+  }
+  if (beads.reason === 'no-bd') {
+    // .beads istnieje, ale CLI `bd` nie ma na PATH → poller nie odczyta issues
+    return <BeadsEmpty icon="📜" color="#f0b56e" title="bd CLI not found" hint=".beads exists, but `bd` is not on PATH" cmd={'Install bd to read issues here'} />;
   }
   if (beads.issues.length === 0) {
-    return (
-      <div style={{ padding: 12, fontSize: 12, color: '#a8a69d', textAlign: 'center' }}>
-        <div style={{ fontSize: 20 }}>✅</div>
-        <div style={{ color: '#5dcaa5' }}>Beads initialized</div>
-        <div style={{ fontSize: 10, marginTop: 4 }}>No open tasks</div>
-        <div style={{ fontSize: 10, color: '#6b6a63', marginTop: 4 }}>Create one with <code>bd create …</code></div>
-      </div>
-    );
+    // zainicjalizowane, ale 0 zadań
+    return <BeadsEmpty icon="✅" color="#5dcaa5" title="Beads initialized" hint="No open tasks" cmd={'Create one with bd create …'} />;
   }
   // Sortuj: otwarte najpierw, potem wg priority (0 = critical)
   const sorted = [...beads.issues].sort((a, b) => {

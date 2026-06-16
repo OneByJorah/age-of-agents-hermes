@@ -2,7 +2,7 @@ import { promises as fs, readFileSync } from 'node:fs';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
-import type { AgentKind, BeadsIssue, GraphifySummary, ProjectIntel } from '@agent-citadel/shared';
+import type { AgentKind, BeadsIssue, BeadsReason, GraphifySummary, ProjectIntel } from '@agent-citadel/shared';
 import type { World } from '../world.js';
 
 const execFileAsync = promisify(execFile);
@@ -54,7 +54,7 @@ function safeReadJsonl(filePath: string): BeadsIssue[] {
   return parseBeadsJsonl(readFileSync(filePath, 'utf8'));
 }
 
-async function readBeads(projectDir: string): Promise<{ available: boolean; issues: BeadsIssue[]; error?: string }> {
+async function readBeads(projectDir: string): Promise<{ available: boolean; issues: BeadsIssue[]; error?: string; reason?: BeadsReason }> {
   // Trzy źródła, w kolejności preferencji:
   //  1. `.beads/issues.jsonl` — JSONL export z Dolt (commitowany do gita).
   //  2. Fallback: `bd list --json` — czyta bezpośrednio z Dolt (embeddeddolt/),
@@ -67,13 +67,14 @@ async function readBeads(projectDir: string): Promise<{ available: boolean; issu
   try {
     await fs.access(issuesPath);
     const issues = safeReadJsonl(issuesPath);
-    return { available: true, issues };
+    return { available: true, issues, reason: issues.length ? 'ok' : 'empty' };
   } catch {
     // issues.jsonl nie istnieje — próbuj dalej.
   }
 
   // Fallback: odpal `bd list --json` by przeczytać z Dolt.
   // Wolniejsze (subprocess), ale daje aktualny stan nawet bez sync.
+  let bdMissing = false; // ENOENT = brak `bd` na PATH
   try {
     const { stdout } = await execFileAsync('bd', ['list', '--json'], {
       cwd: projectDir,
@@ -82,20 +83,21 @@ async function readBeads(projectDir: string): Promise<{ available: boolean; issu
     });
     const arr = JSON.parse(stdout) as Array<Record<string, unknown>>;
     if (!Array.isArray(arr)) return { available: false, issues: [], error: 'bd returned non-array' };
-    return {
-      available: true,
-      issues: arr.map(bdRowToIssue).filter((i): i is BeadsIssue => i !== null),
-    };
-  } catch {
-    // bd niedostępne albo błąd — sprawdź czy w ogóle katalog .beads istnieje.
+    const issues = arr.map(bdRowToIssue).filter((i): i is BeadsIssue => i !== null);
+    return { available: true, issues, reason: issues.length ? 'ok' : 'empty' };
+  } catch (err) {
+    // ENOENT = brak `bd` na PATH; inny błąd (timeout/parse) traktujemy jak brak danych.
+    if (err && typeof err === 'object' && 'code' in err && (err as { code?: string }).code === 'ENOENT') {
+      bdMissing = true;
+    }
   }
 
-  // Czy .beads/ w ogóle istnieje? (zainicjalizowane ale puste / bd nie ma).
+  // Czy .beads/ w ogóle istnieje? (zainicjalizowane ale puste / bd nie ma na PATH).
   try {
     await fs.access(beadsDir);
-    return { available: true, issues: [] };
+    return { available: true, issues: [], reason: bdMissing ? 'no-bd' : 'empty' };
   } catch {
-    return { available: false, issues: [], error: 'no .beads directory' };
+    return { available: false, issues: [], error: 'no .beads directory', reason: 'no-dir' };
   }
 }
 

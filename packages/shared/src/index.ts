@@ -101,6 +101,11 @@ export const WS_PATH = '/ws';
 
 // ─── Beads + Graphify types (Project Intel) ───
 
+/** Powód stanu beadów dla panelu architekta:
+ *  'ok' = są issues · 'empty' = .beads jest, ale 0 issues ·
+ *  'no-bd' = .beads jest, ale brak CLI `bd` na PATH · 'no-dir' = brak katalogu .beads. */
+export type BeadsReason = 'ok' | 'empty' | 'no-bd' | 'no-dir';
+
 /** Pojedynczy task z beads (subset Dolt fields, kompatybilny z `bd list --json`). */
 export interface BeadsIssue {
   id: string;
@@ -130,7 +135,7 @@ export interface ProjectIntel {
   projectName: string;
   activeSessions: number;
   activeAgents: AgentKind[];
-  beads: { available: boolean; issues: BeadsIssue[]; error?: string };
+  beads: { available: boolean; issues: BeadsIssue[]; error?: string; reason?: BeadsReason };
   graphify: { available: boolean; summary: GraphifySummary | null; error?: string };
   refreshedAt: number;
 }
@@ -193,7 +198,7 @@ export interface ProjectIntel {
   /** Ile unikalnych agentów (claude/codex/opencode/koda). */
   activeAgents: AgentKind[];
   /** Status źródeł intel: czy beads + graphify istnieją. */
-  beads: { available: boolean; issues: BeadsIssue[]; error?: string };
+  beads: { available: boolean; issues: BeadsIssue[]; error?: string; reason?: BeadsReason };
   graphify: { available: boolean; summary: GraphifySummary | null; error?: string };
   /** Kiedy ostatnio odświeżono. */
   refreshedAt: number;
