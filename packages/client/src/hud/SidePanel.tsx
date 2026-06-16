@@ -33,6 +33,13 @@ const BUILDING_EMOJI: Record<BuildingId, string> = {
   barracks: '👥',
   market: '📦',
   guild: '🔌',
+  // Punti di raccolta (vengono mostrati solo nei rispettivi temi)
+  arena: '⚔️',
+  tavern: '🍺',
+  garden: '🌿',
+  holodeck: '🎮',
+  mess: '🍽️',
+  hydroponics: '🌱',
 };
 
 /** Etykieta + kolor odznaki agenta w panelu. */

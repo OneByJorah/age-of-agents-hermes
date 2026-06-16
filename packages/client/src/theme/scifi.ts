@@ -25,6 +25,11 @@ export const SCIFI: ThemeDef = {
     { id: 'barracks', label: 'Hangar', gx: 9, gy: 20, w: 3, h: 2, door: { gx: 11, gy: 19.5 }, placeholderColor: 0x1d9e75 },
     { id: 'market', label: 'Spaceport', gx: 26, gy: 20, w: 3, h: 2, door: { gx: 28, gy: 19.5 }, placeholderColor: 0xba7517 },
     { id: 'guild', label: 'Comms Station', gx: 17, gy: 20.5, w: 3, h: 2, door: { gx: 19.5, gy: 20 }, placeholderColor: 0xd4537e },
+    // Punti di raccolta sci-fi (cfr. fantasy arena/tavern/garden): holodeck per
+    // sessioni attive, mensa per chi aspetta, idroponica per chi ha finito.
+    { id: 'holodeck', label: 'Holodeck', gx: 22, gy: 4.5, w: 2, h: 2, door: { gx: 23, gy: 8 }, placeholderColor: 0x1d6eaa },
+    { id: 'mess', label: 'Mess Hall', gx: 14, gy: 4.5, w: 2, h: 2, door: { gx: 15, gy: 8 }, placeholderColor: 0x8a6a3a },
+    { id: 'hydroponics', label: 'Hydroponics', gx: 14, gy: 22, w: 2, h: 2, door: { gx: 15, gy: 21 }, placeholderColor: 0x2a8a4a },
   ],
   crossroads: [
     { id: 'x-center', gx: 19.5, gy: 16.5 },
@@ -46,6 +51,10 @@ export const SCIFI: ThemeDef = {
     ['x-east', 'door:mine'],
     ['x-east', 'x-ne'],
     ['x-ne', 'door:forge'],
+    // Strade minori verso i punti di raccolta
+    ['x-nw', 'door:holodeck'],
+    ['x-nw', 'door:mess'],
+    ['x-center', 'door:hydroponics'],
   ],
   terrain: { base: 0x8a4b32, alt: 0x93553a, path: 0x5a5e66 },
 };

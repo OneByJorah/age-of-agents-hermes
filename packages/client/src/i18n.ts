@@ -351,6 +351,66 @@ const BUILDINGS: Record<ThemeId, Record<BuildingId, Record<Lang, BuildingText>>>
         desc: 'Il nodo delle connessioni. Gli agenti si collegano qui a strumenti e servizi esterni — plugin e integrazioni che estendono ciò che possono fare.',
       },
     },
+    arena: {
+      en: {
+        label: 'Arena',
+        desc: 'A gathering ground for active sessions of the same project — they line up here when many work in parallel, so the citadel square doesn’t overflow.',
+      },
+      pl: {
+        label: 'Arena',
+        desc: 'Miejsce zbiórki aktywnych sesji tego samego projektu — ustawiają się tu, gdy wiele pracuje równolegle, by plac twierdzy się nie przelewał.',
+      },
+      it: {
+        label: 'Arena',
+        desc: 'Punto di raduno per le sessioni attive dello stesso progetto — si mettono in fila qui quando molte lavorano in parallelo, così la piazza della cittadella non trabocca.',
+      },
+    },
+    tavern: {
+      en: {
+        label: 'Tavern',
+        desc: 'A quieter gathering spot for sessions that are waiting or thinking — they rest here with their own project-mates, away from the bustle of the citadel.',
+      },
+      pl: {
+        label: 'Karczma',
+        desc: 'Spokojniejsze miejsce zbiórki sesji, które czekają lub myślą — odpoczywają tu ze swoimi współtowarzyszami z projektu, z dala od zgiełku twierdzy.',
+      },
+      it: {
+        label: 'Taverna',
+        desc: 'Un punto di ritrovo più tranquillo per le sessioni che aspettano o riflettono — riposano qui con i compagni di progetto, lontano dal trambusto della cittadella.',
+      },
+    },
+    garden: {
+      en: {
+        label: 'Garden',
+        desc: 'A restful spot for sessions that just finished their work — they return here to be with other project-mates who have also wrapped up.',
+      },
+      pl: {
+        label: 'Ogród',
+        desc: 'Spokojne miejsce dla sesji, które właśnie skończyły pracę — wracają tu, by być z innymi współtowarzyszami z projektu, którzy też zakończyli.',
+      },
+      it: {
+        label: 'Giardino',
+        desc: 'Un angolo tranquillo per le sessioni che hanno appena finito il loro lavoro — tornano qui per stare con gli altri compagni di progetto che hanno concluso.',
+      },
+    },
+    // I seguenti 3 building esistono solo nel tema sci-fi: in fantasy
+    // il type Record<BuildingId, ...> li richiede comunque (etichette
+    // placeholder, non vengono mai mostrati).
+    holodeck: {
+      en: { label: 'Holodeck', desc: 'Sci-fi gathering point.' },
+      pl: { label: 'Holodek', desc: 'Punkt zbiórki sci-fi.' },
+      it: { label: 'Ologramma', desc: 'Punto di raccolta sci-fi.' },
+    },
+    mess: {
+      en: { label: 'Mess Hall', desc: 'Sci-fi gathering point.' },
+      pl: { label: 'Mes', desc: 'Punkt zbiórki sci-fi.' },
+      it: { label: 'Mensa', desc: 'Punto di raccolta sci-fi.' },
+    },
+    hydroponics: {
+      en: { label: 'Hydroponics', desc: 'Sci-fi gathering point.' },
+      pl: { label: 'Hydroponika', desc: 'Punkt zbiórki sci-fi.' },
+      it: { label: 'Idroponica', desc: 'Punto di raccolta sci-fi.' },
+    },
   },
   scifi: {
     citadel: {
@@ -464,6 +524,65 @@ const BUILDINGS: Record<ThemeId, Record<BuildingId, Record<Lang, BuildingText>>>
         label: 'Stazione di Comunicazione',
         desc: 'Il nodo delle connessioni. Gli agenti si collegano qui a strumenti e servizi esterni — plugin e integrazioni che estendono ciò che possono fare.',
       },
+    },
+    holodeck: {
+      en: {
+        label: 'Holodeck',
+        desc: 'A gathering ground for active sessions of the same project — they line up here when many work in parallel, so the command center doesn’t overflow.',
+      },
+      pl: {
+        label: 'Holodek',
+        desc: 'Miejsce zbiórki aktywnych sesji tego samego projektu — ustawiają się tu, gdy wiele pracuje równolegle, by plac centrum dowodzenia się nie przelewał.',
+      },
+      it: {
+        label: 'Ologramma',
+        desc: 'Punto di raduno per le sessioni attive dello stesso progetto — si mettono in fila qui quando molte lavorano in parallelo, così la piazza del centro comando non trabocca.',
+      },
+    },
+    mess: {
+      en: {
+        label: 'Mess Hall',
+        desc: 'A quieter gathering spot for sessions that are waiting or thinking — they rest here with their own project-mates, away from the bustle of the command center.',
+      },
+      pl: {
+        label: 'Mes',
+        desc: 'Spokojniejsze miejsce zbiórki sesji, które czekają lub myślą — odpoczywają tu ze swoimi współtowarzyszami z projektu, z dala od zgiełku centrum dowodzenia.',
+      },
+      it: {
+        label: 'Mensa',
+        desc: 'Un punto di ritrovo più tranquillo per le sessioni che aspettano o riflettono — riposano qui con i compagni di progetto, lontano dal trambusto del centro comando.',
+      },
+    },
+    hydroponics: {
+      en: {
+        label: 'Hydroponics',
+        desc: 'A restful spot for sessions that just finished their work — they return here to be with other project-mates who have also wrapped up.',
+      },
+      pl: {
+        label: 'Hydroponika',
+        desc: 'Spokojne miejsce dla sesji, które właśnie skończyły pracę — wracają tu, by być z innymi współtowarzyszami z projektu, którzy też zakończyli.',
+      },
+      it: {
+        label: 'Idroponica',
+        desc: 'Un angolo tranquillo per le sessioni che hanno appena finito il loro lavoro — tornano qui per stare con gli altri compagni di progetto che hanno concluso.',
+      },
+    },
+    // Questi 3 building esistono solo nel tema fantasy: in sci-fi il type
+    // Record<BuildingId, ...> li richiede comunque (placeholder, mai mostrati).
+    arena: {
+      en: { label: 'Arena', desc: 'Fantasy gathering point.' },
+      pl: { label: 'Arena', desc: 'Punkt zbiórki fantasy.' },
+      it: { label: 'Arena', desc: 'Punto di raccolta fantasy.' },
+    },
+    tavern: {
+      en: { label: 'Tavern', desc: 'Fantasy gathering point.' },
+      pl: { label: 'Karczma', desc: 'Punkt zbiórki fantasy.' },
+      it: { label: 'Taverna', desc: 'Punto di raccolta fantasy.' },
+    },
+    garden: {
+      en: { label: 'Garden', desc: 'Fantasy gathering point.' },
+      pl: { label: 'Ogród', desc: 'Punkt zbiórki fantasy.' },
+      it: { label: 'Giardino', desc: 'Punto di raccolta fantasy.' },
     },
   },
 };

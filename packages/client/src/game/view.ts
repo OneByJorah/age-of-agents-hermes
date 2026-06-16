@@ -18,6 +18,7 @@ import { peonSpawnScatter } from './scatter';
 import { buildTerrainMap } from './terrain-map';
 import { BUILDING_FX, collectActiveBuildings, type WorkerSample } from './building-fx';
 import { buildingText } from '../i18n';
+import { homeBuilding } from './home-building';
 import type { Lang } from '../settings';
 
 /** Docelowa szerokość dekoracji w kaflach (do skalowania sprite'a). */
@@ -397,7 +398,14 @@ export class GameView {
       seen.add(hero.sessionId);
       let unit = this.units.get(hero.sessionId);
       if (!unit) {
-        const door = this.building('citadel').door;
+        // La piazza della cittadella si intasa se ogni nuova sessione spawna
+        // sulla sua porta. Le nuove sessioni di uno stesso progetto vanno invece
+        // a un "punto di raccolta" coerente con il tema (arena/tavern/garden
+        // per fantasy; holodeck/mess/hydroponics per sci-fi), scelto da un hash
+        // stabile del nome del progetto. La citadella resta la destinazione
+        // per le sessioni senza progetto riconoscibile.
+        const homeId = homeBuilding(this.theme, hero);
+        const door = this.building(homeId).door;
         const sheet = getHeroSheet(sessionToArchetypeKey(hero));
         unit = new Unit(hero.sessionId, hero.teamColor, false, clipName(hero.title), door, this.theme.projection, sheet, hero.agent ?? 'claude', this.theme.heroSprite.scale, this.theme.heroSprite.footAnchor);
         unit.container.eventMode = 'static';
