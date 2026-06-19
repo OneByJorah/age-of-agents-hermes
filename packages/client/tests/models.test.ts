@@ -9,11 +9,16 @@ import {
 } from '../src/theme/models';
 
 describe('resolveContextWindow (DEFAULT)', () => {
-  it('opus → 200k, opus[1m] → 1M (tag bije bazowy)', () => {
-    expect(resolveContextWindow('claude-opus-4-8', DEFAULT_MODEL_CONFIG)).toBe(200_000);
-    expect(resolveContextWindow('claude-opus-4-8[1m]', DEFAULT_MODEL_CONFIG)).toBe(1_000_000);
+  it('realne okna Claude: opus/sonnet/fable = 1M, haiku = 200k', () => {
+    expect(resolveContextWindow('claude-opus-4-8', DEFAULT_MODEL_CONFIG)).toBe(1_000_000);
+    expect(resolveContextWindow('claude-sonnet-4-6', DEFAULT_MODEL_CONFIG)).toBe(1_000_000);
+    expect(resolveContextWindow('claude-fable-5', DEFAULT_MODEL_CONFIG)).toBe(1_000_000);
+    expect(resolveContextWindow('claude-haiku-4-5', DEFAULT_MODEL_CONFIG)).toBe(200_000);
   });
-  it('nieznany / brak modelu → fallback', () => {
+  it('tag [1m] wymusza 1M na bazie 200k (haiku[1m])', () => {
+    expect(resolveContextWindow('claude-haiku-4-5[1m]', DEFAULT_MODEL_CONFIG)).toBe(1_000_000);
+  });
+  it('nieznany / brak modelu → fallback 200k', () => {
     expect(resolveContextWindow('llama3.1:8b', DEFAULT_MODEL_CONFIG)).toBe(200_000);
     expect(resolveContextWindow(undefined, DEFAULT_MODEL_CONFIG)).toBe(200_000);
   });
