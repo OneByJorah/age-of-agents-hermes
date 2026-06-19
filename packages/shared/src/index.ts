@@ -85,6 +85,9 @@ export interface WorldSnapshot {
   heroes: HeroSnapshot[];
   peons: PeonSnapshot[];
   missions: MissionSnapshot[];
+  /** Statyczny ekwipunek per projekt — w snapshocie, by nowy klient dostał go
+   * od razu (arsenal-updated leci tylko przy zmianie). */
+  arsenals: ProjectArsenal[];
 }
 
 /** Linia transkryptu do panelu bocznego (skrót, nie pełna treść). */

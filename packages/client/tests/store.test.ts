@@ -72,3 +72,14 @@ describe('store arsenal-updated', () => {
     expect(useWorld.getState().arsenal['PD']?.projectName).toBe('p');
   });
 });
+
+describe('store snapshot — arsenał', () => {
+  beforeEach(() => useWorld.setState({ arsenal: {} }));
+
+  it('snapshot z arsenals[] zapełnia arsenał (replay dla świeżo podłączonego klienta)', () => {
+    useWorld.getState().apply({
+      type: 'snapshot', heroes: [], peons: [], missions: [], arsenals: [arsenal({ projectDir: 'PD' })],
+    });
+    expect(useWorld.getState().arsenal['PD']?.projectName).toBe('p');
+  });
+});
