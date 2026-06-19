@@ -399,9 +399,12 @@ export function resolveModel(model: string | undefined, cfg: ModelConfig): Resol
 }
 
 /**
- * Wbudowany rejestr = dotychczasowe zachowanie paska (200k bazowo, 1M dla [1m])
- * wyrażone jako DANE + presety tożsamości. Wartości okien Claude potwierdzone
- * przez skill claude-api; modele nie-Claude lądują na fallbacku do konfiguracji.
+ * Wbudowany rejestr = presety tożsamości + realne okna kontekstu Claude
+ * (potwierdzone przez skill claude-api, 2026-06): Opus 4.8 / Sonnet 4.6 / Fable 5
+ * to natywnie 1M, Haiku 4.5 to 200k. Tag [1m] (jawny beta-flag, np. Sonnet 4.5)
+ * trzymamy na górze, by wymusić 1M niezależnie od bazy. Modele nie-Claude →
+ * fallback do konfiguracji przez usera. To naprawia stary contextWindow() (200k
+ * dla wszystkiego poza [1m]), który zaniżał okno modeli natywnie 1M.
  */
 export const DEFAULT_MODEL_CONFIG: ModelConfig = {
   sprites: [
@@ -411,13 +414,13 @@ export const DEFAULT_MODEL_CONFIG: ModelConfig = {
     { match: { kind: 'pattern', pattern: 'fable' }, sprite: 'fable', displayName: 'Fable 5' },
   ],
   windows: [
-    { match: { kind: 'pattern', pattern: '[1m]' }, contextWindow: 1_000_000 }, // tag 1M bije bazowe
-    { match: { kind: 'pattern', pattern: 'opus' }, contextWindow: 200_000 },
-    { match: { kind: 'pattern', pattern: 'sonnet' }, contextWindow: 200_000 },
-    { match: { kind: 'pattern', pattern: 'haiku' }, contextWindow: 200_000 },
-    { match: { kind: 'pattern', pattern: 'fable' }, contextWindow: 200_000 },
+    { match: { kind: 'pattern', pattern: '[1m]' }, contextWindow: 1_000_000 }, // jawny tag 1M bije bazę
+    { match: { kind: 'pattern', pattern: 'opus' }, contextWindow: 1_000_000 }, // Opus 4.6/4.7/4.8 = 1M
+    { match: { kind: 'pattern', pattern: 'sonnet' }, contextWindow: 1_000_000 }, // Sonnet 4.6 = 1M
+    { match: { kind: 'pattern', pattern: 'haiku' }, contextWindow: 200_000 }, // Haiku 4.5 = 200k
+    { match: { kind: 'pattern', pattern: 'fable' }, contextWindow: 1_000_000 }, // Fable 5 = 1M
   ],
-  fallback: { sprite: 'sonnet', contextWindow: 200_000 },
+  fallback: { sprite: 'sonnet', contextWindow: 200_000 }, // nieznane modele: konserwatywnie 200k
 };
 
 /** Waliduje surowy obiekt na ModelConfig. Buduje CZYSTY config (bez nadmiarowych pól). */
