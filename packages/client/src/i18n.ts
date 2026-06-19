@@ -110,6 +110,8 @@ export interface UiStrings {
   windowLabel: string;
   fallbackLabel: string;
   addRow: string;
+  defaultMark: string;
+  setDefault: string;
 }
 
 const EN: UiStrings = {
@@ -222,6 +224,8 @@ const EN: UiStrings = {
   windowLabel: 'tokens',
   fallbackLabel: 'Default (unmatched)',
   addRow: '+ add',
+  defaultMark: 'default',
+  setDefault: 'set default',
 };
 
 const PL: UiStrings = {
@@ -334,6 +338,8 @@ const PL: UiStrings = {
   windowLabel: 'tokeny',
   fallbackLabel: 'Domyślne (niedopasowane)',
   addRow: '+ dodaj',
+  defaultMark: 'domyślny',
+  setDefault: 'ustaw domyślny',
 };
 
 const IT: UiStrings = {
@@ -446,6 +452,8 @@ const IT: UiStrings = {
   windowLabel: 'token',
   fallbackLabel: 'Predefinito (non abbinato)',
   addRow: '+ aggiungi',
+  defaultMark: 'predefinito',
+  setDefault: 'imposta predefinito',
 };
 
 const UI: Record<Lang, UiStrings> = { en: EN, pl: PL, it: IT };
