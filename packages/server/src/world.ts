@@ -3,6 +3,7 @@ import type {
   HeroSnapshot,
   MissionSnapshot,
   PeonSnapshot,
+  ProjectArsenal,
   WorldSnapshot,
 } from '@agent-citadel/shared';
 
@@ -17,6 +18,7 @@ export class World {
   private heroes = new Map<string, HeroSnapshot>();
   private peons = new Map<string, PeonSnapshot>();
   private missions = new Map<string, MissionSnapshot>();
+  private arsenals = new Map<string, ProjectArsenal>();
   private listeners = new Set<Listener>();
   private nextTeamColor = 0;
 
@@ -42,7 +44,16 @@ export class World {
       heroes: [...this.heroes.values()],
       peons: [...this.peons.values()],
       missions: [...this.missions.values()],
+      arsenals: [...this.arsenals.values()],
     };
+  }
+
+  /** Zapisuje statyczny ekwipunek projektu (klucz: projectDir) i emituje
+   * `arsenal-updated`. Trzymanie go w stanie świata sprawia, że nowy klient
+   * dostaje arsenał w snapshocie, a nie dopiero przy następnej zmianie. */
+  setArsenal(arsenal: ProjectArsenal): void {
+    this.arsenals.set(arsenal.projectDir, arsenal);
+    this.emit({ type: 'arsenal-updated', arsenal });
   }
 
   /** Zwraca unikalne, aktywne katalogi projektów (w tej chwili pracujących sesji).

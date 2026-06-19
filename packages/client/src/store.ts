@@ -83,6 +83,8 @@ export const useWorld = create<WorldStore>((set) => ({
             heroes: Object.fromEntries(event.heroes.map((h) => [h.sessionId, h])),
             peons: Object.fromEntries(event.peons.map((p) => [p.agentId, p])),
             missions: Object.fromEntries(event.missions.map((m) => [m.id, m])),
+            // `?? []` — odporność na starszy serwer bez arsenału w snapshocie.
+            arsenal: Object.fromEntries((event.arsenals ?? []).map((a) => [a.projectDir, a])),
           };
         case 'hero-spawned':
         case 'hero-updated': {
