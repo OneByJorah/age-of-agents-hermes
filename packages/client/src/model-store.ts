@@ -62,9 +62,15 @@ export const useModels = create<ModelStore>((set, get) => ({
   models: readCache(),
   modelsLoaded: false,
   setModels: (config) => {
-    set({ models: config });
-    writeCache(config);
-    putModels(config);
+    set({ models: config }); // stan zawsze aktualny — edytor pokazuje bieżący wpis na żywo
+    // Persystuj TYLKO poprawny config. Stan przejściowo niepoprawny (np. świeżo
+    // dodany wiersz z pustym wzorcem) nie może trafić do localStorage/serwera —
+    // inaczej readCache przy reloadzie odrzuciłby CAŁY config i zresetował do
+    // DEFAULT, gubiąc pozostałe edycje usera.
+    if (validateModelConfig(config).ok) {
+      writeCache(config);
+      putModels(config);
+    }
   },
   resetModels: () => get().setModels(DEFAULT_MODEL_CONFIG),
   hydrate: async () => {

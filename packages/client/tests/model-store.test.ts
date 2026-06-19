@@ -41,6 +41,26 @@ describe('useModels store', () => {
     await Promise.resolve();
     expect(useModels.getState().models).toEqual(CUSTOM);
   });
+  it('niepoprawny config: stan żywy, ale BEZ zapisu do localStorage/PUT', () => {
+    // Świeżo dodany wiersz z pustym wzorcem = config niepoprawny przejściowo.
+    const invalid = {
+      sprites: [{ match: { kind: 'pattern', pattern: '' }, sprite: 'opus' }],
+      windows: [],
+      fallback: { sprite: 'sonnet', contextWindow: 200_000 },
+    } as unknown as ModelConfig;
+    const store: Record<string, string> = {};
+    (globalThis as { localStorage?: unknown }).localStorage = {
+      getItem: (k: string) => store[k] ?? null,
+      setItem: (k: string, v: string) => { store[k] = v; },
+      removeItem: (k: string) => { delete store[k]; },
+    };
+    const f = vi.fn(() => Promise.resolve(new Response('{}')));
+    vi.stubGlobal('fetch', f);
+    useModels.getState().setModels(invalid);
+    expect(useModels.getState().models).toEqual(invalid); // stan żywy (edytor pokazuje wiersz)
+    expect(f).not.toHaveBeenCalled(); // nie PUT-ujemy garbage'u
+    expect(store['age-of-agents.models']).toBeUndefined(); // nie zatruwamy localStorage
+  });
   it('hydrate wczytuje config z GET', async () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(new Response(JSON.stringify(CUSTOM)))));
     await useModels.getState().hydrate();
