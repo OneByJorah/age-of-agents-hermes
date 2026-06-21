@@ -114,6 +114,19 @@ export interface UiStrings {
   addRow: string;
   defaultMark: string;
   setDefault: string;
+  // Pending-question card & panel-control toggle
+  pqPermissionTitle: string;
+  pqPlanTitle: string;
+  pqQuestionTitle: string;
+  pqAllow: string;
+  pqAllowAlways: string;
+  pqDeny: string;
+  pqApprovePlan: string;
+  pqRejectPlan: string;
+  pqAnswerInTerminal: string;
+  pqPanelControl: string;
+  pqPanelControlOn: string;
+  pqPanelControlOff: string;
 }
 
 const EN: UiStrings = {
@@ -232,6 +245,19 @@ const EN: UiStrings = {
   addRow: '+ add',
   defaultMark: 'default',
   setDefault: 'set default',
+  // Pending-question card & panel-control toggle
+  pqPermissionTitle: 'Permission request',
+  pqPlanTitle: 'Plan ready for approval',
+  pqQuestionTitle: 'Agent question',
+  pqAllow: 'Allow',
+  pqAllowAlways: 'Always allow',
+  pqDeny: 'Deny',
+  pqApprovePlan: 'Approve',
+  pqRejectPlan: 'Reject',
+  pqAnswerInTerminal: 'Answer in the terminal',
+  pqPanelControl: 'Answer prompts in panel',
+  pqPanelControlOn: 'Panel answering: ON',
+  pqPanelControlOff: 'Panel answering: OFF',
 };
 
 const PL: UiStrings = {
@@ -350,6 +376,19 @@ const PL: UiStrings = {
   addRow: '+ dodaj',
   defaultMark: 'domyślny',
   setDefault: 'ustaw domyślny',
+  // Pending-question card & panel-control toggle
+  pqPermissionTitle: 'Prośba o uprawnienie',
+  pqPlanTitle: 'Plan do akceptacji',
+  pqQuestionTitle: 'Pytanie agenta',
+  pqAllow: 'Pozwól',
+  pqAllowAlways: 'Pozwól zawsze',
+  pqDeny: 'Odmów',
+  pqApprovePlan: 'Akceptuj',
+  pqRejectPlan: 'Odrzuć',
+  pqAnswerInTerminal: 'Odpowiedz w terminalu',
+  pqPanelControl: 'Odpowiadaj na prompty w panelu',
+  pqPanelControlOn: 'Odpowiadanie w panelu: WŁ.',
+  pqPanelControlOff: 'Odpowiadanie w panelu: WYŁ.',
 };
 
 const IT: UiStrings = {
@@ -468,6 +507,19 @@ const IT: UiStrings = {
   addRow: '+ aggiungi',
   defaultMark: 'predefinito',
   setDefault: 'imposta predefinito',
+  // Pending-question card & panel-control toggle
+  pqPermissionTitle: 'Richiesta di permesso',
+  pqPlanTitle: 'Piano da approvare',
+  pqQuestionTitle: 'Domanda dell’agente',
+  pqAllow: 'Consenti',
+  pqAllowAlways: 'Consenti sempre',
+  pqDeny: 'Nega',
+  pqApprovePlan: 'Approva',
+  pqRejectPlan: 'Rifiuta',
+  pqAnswerInTerminal: 'Rispondi nel terminale',
+  pqPanelControl: 'Rispondi ai prompt nel pannello',
+  pqPanelControlOn: 'Risposta nel pannello: ON',
+  pqPanelControlOff: 'Risposta nel pannello: OFF',
 };
 
 const UI: Record<Lang, UiStrings> = { en: EN, pl: PL, it: IT };
