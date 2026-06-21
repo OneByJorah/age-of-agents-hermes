@@ -180,3 +180,17 @@ export async function uninstallHooks(): Promise<void> {
   }
   await writeFile(settingsPath(), `${JSON.stringify(settings, null, 2)}\n`, 'utf8');
 }
+
+/** Shapes a Claude Code PreToolUse hook decision for stdout / HTTP response. */
+export function decisionToHookOutput(
+  decision: 'allow' | 'deny',
+  reason?: string,
+): { hookSpecificOutput: Record<string, unknown> } {
+  return {
+    hookSpecificOutput: {
+      hookEventName: 'PreToolUse',
+      permissionDecision: decision,
+      ...(reason ? { permissionDecisionReason: reason } : {}),
+    },
+  };
+}
