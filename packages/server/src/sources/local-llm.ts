@@ -55,6 +55,7 @@ export function localLlmToolToCanonical(name: string): string {
     case 'todowrite':
       return 'TodoWrite';
     default:
+      if (name.startsWith('mcp__')) return name;
       if (name.includes('__')) return `mcp__${name}`;
       if (name.includes('.')) return `mcp__${name.replace(/\./g, '__')}`;
       return name;
