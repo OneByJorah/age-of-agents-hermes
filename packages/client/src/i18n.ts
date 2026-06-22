@@ -98,6 +98,8 @@ export interface UiStrings {
   // Zakładka Modele
   tabBuildingReactions: string;
   tabModels: string;
+  allRandomLabel: string;
+  allRandomHint: string;
   models: string;
   modelsHint: string;
   spriteAndName: string;
@@ -250,6 +252,8 @@ const EN: UiStrings = {
   addTriggerConfirm: 'Add trigger',
   tabBuildingReactions: 'Building reactions',
   tabModels: 'Models',
+  allRandomLabel: 'All random sprites',
+  allRandomHint: 'Every agent gets a random look from the whole pool. Refresh reshuffles the city.',
   models: 'Models',
   modelsHint: 'Tell the world how to recognize each model: which character it appears as, and how big its context window is. The 1M tag matters for the window. Edit visually or as JSON — both stay in sync.',
   spriteAndName: 'Character & name',
@@ -402,6 +406,8 @@ const PL: UiStrings = {
   addTriggerConfirm: 'Dodaj wyzwalacz',
   tabBuildingReactions: 'Reakcje budynków',
   tabModels: 'Modele',
+  allRandomLabel: 'Losowe sprite\'y',
+  allRandomHint: 'Każdy agent dostaje losowy wygląd z całej puli. Odświeżenie przelosowuje miasto.',
   models: 'Modele',
   modelsHint: 'Powiedz światu, jak rozpoznać każdy model: jako który bohater się pokazuje i jak duże ma okno kontekstu. Tag 1M ma znaczenie dla okna. Edytuj wizualnie albo jako JSON — oba są zsynchronizowane.',
   spriteAndName: 'Bohater i nazwa',
@@ -554,6 +560,8 @@ const IT: UiStrings = {
   addTriggerConfirm: 'Aggiungi trigger',
   tabBuildingReactions: 'Reazioni degli edifici',
   tabModels: 'Modelli',
+  allRandomLabel: 'Sprite casuali',
+  allRandomHint: 'Ogni agente riceve un aspetto casuale dall\'intero set. L\'aggiornamento rimescola la città.',
   models: 'Modelli',
   modelsHint: 'Indica al mondo come riconoscere ogni modello: con quale personaggio appare e quanto è grande la sua finestra di contesto. Il tag 1M conta per la finestra. Modifica visivamente o come JSON — restano sincronizzati.',
   spriteAndName: 'Personaggio e nome',
