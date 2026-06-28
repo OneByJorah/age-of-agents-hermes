@@ -12,7 +12,7 @@ import type { SourceWatcher } from './watcher.js';
 import { PendingRegistry } from './pending-registry.js';
 import { registerPermissionPolicyRoutes } from './permission-policy-routes.js';
 import { LiveSessionRegistry } from './sdk/sessions.js';
-import { registerSessionRoutes } from './session-routes.js';
+import { registerSessionRoutes, loadHermesSessions } from './session-routes.js';
 import { registerFsRoutes } from './fs-routes.js';
 import { loadOrCreateToken } from './security/token.js';
 import { registerSecurityGuard, verifyWsClient } from './security/guard.js';
@@ -151,6 +151,20 @@ export async function startServer(opts: StartServerOptions): Promise<RunningServ
       arsenalPoller = new ArsenalPoller(world);
       arsenalPoller.start();
       app.log.info(`Source watchers active: ${watchers.map((w) => w.id).join(', ')}`);
+
+      // Seed Hermes sessions from state.db into the watcher so they appear on the map
+      // even if older than the 30-minute threshold (Hermes has no JSONL files to reactivate them).
+      if (primaryWatcher && primaryWatcher.id === 'hermes') {
+        const hermesSessions = loadHermesSessions();
+        for (const s of hermesSessions) {
+          if (!s.sessionId) continue;
+          primaryWatcher.applyExternalFacts(s.sessionId, s.cwd || '/', [
+            { kind: 'meta', ts: s.startedAt },
+            { kind: 'prompt', text: 'Hermes session (historical)', ts: s.startedAt },
+          ], s.cwd);
+        }
+        app.log.info(`Seeded ${hermesSessions.length} Hermes sessions from state.db into watcher`);
+      }
     });
   }
 

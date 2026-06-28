@@ -12,7 +12,7 @@ function authConfigured(): boolean {
   return !!(e.CLAUDE_CODE_OAUTH_TOKEN || e.ANTHROPIC_API_KEY || e.ANTHROPIC_AUTH_TOKEN || e.CLAUDE_CODE_USE_BEDROCK || e.CLAUDE_CODE_USE_VERTEX);
 }
 
-function loadHermesSessions() {
+export function loadHermesSessions() {
   try {
     const db = new Database(join(homedir(), '.hermes', 'state.db'));
     const rows = db.prepare('SELECT id, started_at, ended_at, cwd FROM sessions ORDER BY started_at DESC LIMIT 200').all() as { id: string; started_at?: string; ended_at?: string; cwd?: string }[];
