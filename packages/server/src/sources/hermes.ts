@@ -87,24 +87,24 @@ function sessionTitle(sessionId: string, db: Database.Database | null): string |
 export const hermesSource: AgentSource = {
   id: "hermes",
   roots: () => {
-    const candidates = [join(HERMES_STATE_DIR, "logs")];
+    const candidates = [join(HERMES_STATE_DIR, "logs"), join(HERMES_STATE_DIR, "sessions")];
     const db = openDb();
     if (db) {
       try {
         const rows = db.prepare("SELECT id FROM sessions").all() as { id?: string }[];
         for (const row of rows) {
-          if (typeof row.id === "string" && row.id.trim()) {
-            candidates.push(join(HERMES_STATE_DIR, row.id.trim()));
-          }
+          const id = typeof row.id === "string" ? row.id.trim() : "";
+          if (!id) continue;
+          candidates.push(join(HERMES_STATE_DIR, id));
         }
       } catch {
         // ignore SQLite metadata lookup failures
       }
       try { db.close(); } catch {}
     }
-    return rootIfExists(HERMES_STATE_DIR);
+    return candidates.filter((candidate) => rootIfExists(candidate).length > 0).flatMap((candidate) => rootIfExists(candidate));
   },
-  depth: 3,
+  depth: 6,
   classify(_path: string, _root: string): ClassifiedFile {
     return { kind: "other" };
   },

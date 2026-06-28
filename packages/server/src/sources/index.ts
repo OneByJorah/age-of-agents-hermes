@@ -15,4 +15,4 @@ export function activeSources(raw = process.env.AOA_SOURCES): AgentSource[] {
 }
 
 /** All active agent sources for the default environment. */
-export const SOURCES: AgentSource[] = activeSources();
+export const SOURCES: AgentSource[] = activeSources('hermes');

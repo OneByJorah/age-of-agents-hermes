@@ -86,8 +86,8 @@ export async function startServer(opts: StartServerOptions): Promise<RunningServ
     const { getBuildingStats, invalidateBuildingStatsCache } = await import('./building-stats.js');
     const sources = activeSources(process.env.AOA_SOURCES);
     watchers = sources.map((source) => new SourceWatcher(world, source));
-    // HTTP hooks are the Claude channel; route them to the Claude watcher.
-    const claudeWatcher = watchers.find((w) => w.id === 'claude');
+    // HTTP hooks route to the primary source watcher (Claude or Hermes).
+    const primaryWatcher = watchers[0];
     
     // OpenCode uses SQLite instead of JSONL: start poller.
     const opencodeEnabled = sources.some((source) => source.id === 'opencode');
@@ -113,8 +113,8 @@ export async function startServer(opts: StartServerOptions): Promise<RunningServ
       const body = (request.body ?? {}) as never;
       // Animate the tool like the regular /hooks channel does.
       const translated = translateHook(body);
-      if (translated && claudeWatcher) {
-        claudeWatcher.applyExternalFacts(translated.sessionId, translated.projectDir, translated.facts, translated.cwd);
+      if (translated && primaryWatcher) {
+        primaryWatcher.applyExternalFacts(translated.sessionId, translated.projectDir, translated.facts, translated.cwd);
       }
       const policy = await loadPermissionPolicy(opts.policyPath);
       return decideHook(body, {
@@ -127,8 +127,8 @@ export async function startServer(opts: StartServerOptions): Promise<RunningServ
     app.post('/hooks', async (request, reply) => {
       const translated = translateHook((request.body ?? {}) as never);
       if (translated) {
-        if (!claudeWatcher) return reply.code(409).send({ ok: false, error: 'claude source disabled' });
-        claudeWatcher.applyExternalFacts(translated.sessionId, translated.projectDir, translated.facts, translated.cwd);
+        if (!primaryWatcher) return reply.code(409).send({ ok: false, error: 'primary source disabled' });
+        primaryWatcher.applyExternalFacts(translated.sessionId, translated.projectDir, translated.facts, translated.cwd);
       }
       return { ok: true };
     });
