@@ -15,9 +15,16 @@ function authConfigured(): boolean {
 export function loadHermesSessions() {
   try {
     const db = new Database(join(homedir(), '.hermes', 'state.db'));
-    const rows = db.prepare('SELECT id, started_at, ended_at, cwd FROM sessions ORDER BY started_at DESC LIMIT 200').all() as { id: string; started_at?: string; ended_at?: string; cwd?: string }[];
+    const rows = db.prepare('SELECT id, started_at, ended_at, cwd, model, source, title FROM sessions ORDER BY started_at DESC LIMIT 200').all() as { id: string; started_at?: string; ended_at?: string; cwd?: string; model?: string; source?: string; title?: string }[];
     db.close();
-    return rows.map(r => ({ sessionId: r.id, startedAt: r.started_at ?? new Date().toISOString(), cwd: r.cwd ?? '' }));
+    return rows.map(r => ({ 
+      sessionId: r.id, 
+      startedAt: r.started_at ?? new Date().toISOString(), 
+      cwd: r.cwd ?? '',
+      model: r.model ?? null,
+      agent: r.source ?? 'hermes',
+      title: r.title ?? null
+    }));
   } catch {
     return [];
   }
