@@ -11,7 +11,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/ws': { target: 'ws://127.0.0.1:8124', ws: true },
+      '/ws': { target: 'ws://127.0.0.1:8124', ws: true, timeout: 60000 },
       '/session-token': 'http://127.0.0.1:8124',
       '/hooks': 'http://127.0.0.1:8124',
       '/health': 'http://127.0.0.1:8124',
