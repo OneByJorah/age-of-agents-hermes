@@ -1,6 +1,6 @@
 /** Dev servers we trust beyond the runtime port (Vite dev + preview). */
 const DEV_PORTS = new Set([5173, 4173]);
-const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1']);
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '100.92.150.99']);
 
 /**
  * True when a request may proceed past the Origin gate.

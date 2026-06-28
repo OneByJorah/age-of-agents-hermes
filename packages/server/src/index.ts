@@ -12,7 +12,12 @@ process.on('uncaughtException', (err) => {
   console.error('Uncaught exception — server keeps running:', err);
 });
 
-const demo = process.argv.includes('--demo');
-const server = await startServer({ port: SERVER_PORT, host: '127.0.0.1', demo });
+import { parseArgs } from './cli-args.js';
+const cliOpts = parseArgs(process.argv.slice(2));
+const server = await startServer({
+  port: cliOpts.port,
+  host: process.env.AOA_HOST ?? '127.0.0.1',
+  demo: cliOpts.demo,
+});
 console.log(`Age of Agents server (dev): ${server.url} (ws: /ws)`);
-if (demo) console.log('Demo mode: scenario generator started');
+if (cliOpts.demo) console.log('Demo mode: scenario generator started');

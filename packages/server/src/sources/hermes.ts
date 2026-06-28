@@ -6,6 +6,7 @@ import { interpretLine } from '../transcript/parser.js';
 import { rootIfExists } from './config.js';
 
 const HERMES_DB = process.env.AOA_HERMES_DB ?? join(homedir(), ".hermes", "state.db");
+const HERMES_STATE_DIR = join(homedir(), ".hermes");
 
 function openDb(): Database.Database | null {
   try {
@@ -17,33 +18,7 @@ function openDb(): Database.Database | null {
   }
 }
 
-function sessionTitle(sessionId: string, db: Database.Database | null): string | undefined {
-  if (!db) return undefined;
-  try {
-    const row = db.prepare("SELECT title FROM sessions WHERE id = ?").get(sessionId) as { title?: string } | undefined;
-    return row?.title;
-  } catch {
-    return undefined;
-  }
-}
-
-function sessionMeta(sessionId: string, db: Database.Database | null) {
-  const out: { cwd?: string; model?: string; source?: string } = {};
-  if (!db) return out;
-  try {
-    const rows = db.prepare("SELECT key, value FROM state_meta WHERE session_id = ?").all(sessionId) as { key: string; value?: string }[];
-    for (const row of rows) {
-      if (row.key === "cwd") out.cwd = row.value ?? out.cwd;
-      else if (row.key === "model") out.model = row.value ?? out.model;
-      else if (row.key === "source") out.source = row.value ?? out.source;
-    }
-  } catch {
-    // ignore partial metadata reads
-  }
-  return out;
-}
-
-function recentTool(line: any): string | undefined {
+function recentTool(line: any): { name: string; detail?: string } | undefined {
   const role = typeof line.role === "string" ? line.role.toLowerCase() : "";
   const content = typeof line.content === "string" ? line.content : "";
   if (role !== "assistant") return undefined;
@@ -76,53 +51,62 @@ function parseHermesLine(line: string): Fact[] {
   }
   if (!record || typeof record !== "object") return [];
   const ts: string = typeof record.ts === "string" ? record.ts : new Date().toISOString();
-  const role = typeof record.role === "string" ? record.role.toLowerCase() : "";
-  const db = openDb();
   const sessionId = typeof record.session_id === "string" ? record.session_id : typeof record.sessionId === "string" ? record.sessionId : "";
-  const meta = sessionMeta(sessionId, db);
   const facts: Fact[] = [];
   if (typeof record.content === "string" && record.content.trim()) {
+    const role = typeof record.role === "string" ? record.role.toLowerCase() : "";
     if (role === "user") facts.push({ kind: "prompt", text: clip(record.content), ts });
     else if (role === "assistant") facts.push({ kind: "assistant-text", text: clip(record.content), ts });
   }
   const tool = recentTool(record);
-    if (tool) {
-      facts.push({
-        kind: 'tool-start',
-        tool: tool.name,
-        detail: tool.detail,
-        messageId: `hermes-${ts}`,
-        ts,
-      });
+  if (tool) {
+    facts.push({
+      kind: 'tool-start',
+      tool: tool.name,
+      detail: tool.detail,
+      messageId: `hermes-${ts}`,
+      ts,
+    });
   }
-  if ((role === "assistant" || role === "tool") && sessionId) {
+  if (sessionId) {
     facts.push({ kind: "turn-end", ts });
   }
-  db?.close();
   return facts;
+}
+
+function sessionTitle(sessionId: string, db: Database.Database | null): string | undefined {
+  if (!db) return undefined;
+  try {
+    const row = db.prepare("SELECT title FROM sessions WHERE id = ?").get(sessionId) as { title?: string } | undefined;
+    return row?.title;
+  } catch {
+    return undefined;
+  }
 }
 
 export const hermesSource: AgentSource = {
   id: "hermes",
   roots: () => {
-    const dir = join(homedir(), ".hermes", "logs");
-    try {
-      const fs = require("node:fs");
-      return fs.existsSync(dir) ? [dir] : [];
-    } catch {
-      return [];
+    const candidates = [join(HERMES_STATE_DIR, "logs")];
+    const db = openDb();
+    if (db) {
+      try {
+        const rows = db.prepare("SELECT id FROM sessions").all() as { id?: string }[];
+        for (const row of rows) {
+          if (typeof row.id === "string" && row.id.trim()) {
+            candidates.push(join(HERMES_STATE_DIR, row.id.trim()));
+          }
+        }
+      } catch {
+        // ignore SQLite metadata lookup failures
+      }
+      try { db.close(); } catch {}
     }
+    return rootIfExists(HERMES_STATE_DIR);
   },
   depth: 3,
   classify(_path: string, _root: string): ClassifiedFile {
-    // All files under .hermes/logs are treated as session targets unless explicitly filtered.
     return { kind: "other" };
   },
   parseLine: parseHermesLine,
 };
-
-export function sessionIdForHermes(dir: string): string | undefined {
-  const base = basename(dir);
-  if (base && base !== "logs") return base;
-  return undefined;
-}
