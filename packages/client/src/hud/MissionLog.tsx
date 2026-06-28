@@ -24,7 +24,11 @@ export function MissionLog() {
   const t = useUi();
   if (selected || selectedBuilding) return null; // side/building panel owns the right side
 
-  const all = Object.values(missions).sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+  const all = Object.values(missions).sort((a, b) => {
+    const aTime = typeof a.startedAt === 'string' ? new Date(a.startedAt).getTime() : a.startedAt;
+    const bTime = typeof b.startedAt === 'string' ? new Date(b.startedAt).getTime() : b.startedAt;
+    return bTime - aTime;
+  });
   const active = all.filter((m) => m.status === 'active').slice(0, 5);
   const done = all.filter((m) => m.status !== 'active').slice(0, 5);
   if (active.length + done.length === 0) return null;
