@@ -12,5 +12,7 @@ export const EMBLEM_BASE = '/assets/emblems';
 export function emblemSrc(agent: AgentKind | undefined): string | undefined {
   const provider = resolveProvider(agent);
   if (provider.color === null) return undefined;
+  // Hermes doesn't have an emblem PNG yet
+  if (provider.kind === 'hermes') return undefined;
   return `${EMBLEM_BASE}/${provider.kind}.png`;
 }
