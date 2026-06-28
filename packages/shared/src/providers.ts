@@ -20,10 +20,11 @@ export interface ProviderInfo {
  */
 export const AGENT_PROVIDERS: Record<AgentKind, ProviderInfo> = {
   claude: { kind: 'claude', label: 'Claude', labelShort: 'C', color: null },
-  codex: { kind: 'codex', label: 'Codex', labelShort: 'C', color: '#10a37f' }, // zielony OpenAI
-  opencode: { kind: 'opencode', label: 'OpenCode', labelShort: 'O', color: '#f59e0b' }, // amber-500
-  koda: { kind: 'koda', label: 'Koda', labelShort: 'K', color: '#8b5cf6' }, // violet-500
-  'local-llm': { kind: 'local-llm', label: 'Local LLM', labelShort: 'L', color: '#22d3ee' }, // cyan-400
+  codex: { kind: 'codex', label: 'Codex', labelShort: 'C', color: '#10a37f' },
+  opencode: { kind: 'opencode', label: 'OpenCode', labelShort: 'O', color: '#f59e0b' },
+  koda: { kind: 'koda', label: 'Koda', labelShort: 'K', color: '#8b5cf6' },
+  'local-llm': { kind: 'local-llm', label: 'Local LLM', labelShort: 'L', color: '#22d3ee' },
+  hermes: { kind: 'hermes', label: 'Hermes', labelShort: 'H', color: '#ec4899' },
 };
 
 /**
