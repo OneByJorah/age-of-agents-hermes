@@ -23,6 +23,7 @@ function prettifyName(raw: string, fallback: string): string {
   // If this is a normal path (has "/" or "\"), use basename.
   if (/[\\/]/.test(raw)) {
     const parts = raw.split(/[\\/]/).filter(Boolean);
+    if (parts.length === 0) return fallback; // e.g. raw === "/" or empty
     return prettifyName(parts[parts.length - 1], fallback);
   }
   // Koda encoding: "C-Users-pietr-progetti-learneoo" (hyphens instead of separators).
