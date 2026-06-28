@@ -1,0 +1,42 @@
+services:
+  # --- Age of Agents Server ---
+  age-of-agents-server:
+    build:
+      context: ./packages/server
+      dockerfile: Dockerfile
+    container_name: age-of-agents-server
+    ports:
+      - "5173:5173"  # HTTP + WebSocket
+    environment:
+      AOA_SOURCES: ${AOA_SOURCES:-claude,codex,opencode,koda}
+      AOA_DEMO: ${AOA_DEMO:-false}
+    volumes:
+      - age-of-agents-data:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ~/.claude:/home/node/.claude:ro
+      - ~/.codex:/home/node/.codex:ro
+      - ~/.opencode:/home/node/.opencode:ro
+      - ~/.koda:/home/node/.koda:ro
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:5173/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  # --- Age of Agents Client (served by server in production) ---
+  age-of-agents-client:
+    build:
+      context: ./packages/client
+      dockerfile: Dockerfile
+    container_name: age-of-agents-client
+    ports:
+      - "3000:3000"
+    depends_on:
+      age-of-agents-server:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  age-of-agents-data:
