@@ -195,3 +195,9 @@ Issues and PRs are welcome. To get going: `npm install`, then `npm run demo` to 
 ## 🙏 Acknowledgements
 
 Inspired by [AgentCraft](https://www.getagentcraft.com). Built with [PixiJS](https://pixijs.com), [React](https://react.dev), [Fastify](https://fastify.dev) and [PixelLab](https://pixellab.ai).
+
+---
+
+[![Built by](https://img.shields.io/badge/built%20by-JorahOne%20LLC-FFB300?style=for-the-badge&labelColor=0d0d0c)](https://github.com/OneByJorah)
+
+<sub>Fork maintained by JorahOne, LLC as part of the JorahOne infrastructure ecosystem.</sub>
