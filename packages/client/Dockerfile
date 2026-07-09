@@ -2,17 +2,17 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files (monorepo root context)
 COPY package.json package-lock.json* ./
-COPY ../../package.json ../../package-lock.json* ./
-COPY ../../packages/shared/package.json ../../packages/shared/package.json
+COPY packages/shared/package.json packages/shared/package.json
+COPY packages/client/package.json packages/client/package.json
 
 # Install dependencies
 RUN npm ci --workspace=@agent-citadel/shared --workspace=@agent-citadel/client
 
 # Copy source
-COPY ../../packages/shared ../../packages/shared
-COPY ../../packages/client ../../packages/client
+COPY packages/shared packages/shared
+COPY packages/client packages/client
 
 # Build
 RUN npm run build --workspace=@agent-citadel/client
