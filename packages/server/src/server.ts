@@ -178,7 +178,7 @@ export async function startServer(opts: StartServerOptions): Promise<RunningServ
   const wss = new WebSocketServer({
     server: app.server,
     path: WS_PATH,
-    verifyClient: (info) =>
+    verifyClient: (info: { origin: string; req: { url?: string } }) =>
       verifyWsClient({ origin: info.origin, reqUrl: info.req.url }, resolvedPort, token),
   });
 
