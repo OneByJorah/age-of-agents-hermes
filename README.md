@@ -1,30 +1,25 @@
 <div align="center">
-  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white">
-  <img src="https://img.shields.io/badge/Canvas-FF6B6B?style=for-the-badge&logo=html5&logoColor=white">
-  <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge">
-  <img src="https://img.shields.io/badge/npx-run_now-FF6B6B?style=for-the-badge&logo=npm&logoColor=white">
-</div>
 
-<br>
+![age-of-agents-hermes banner](docs/assets/banner.svg)
 
-<div align="center">
-  <h1>age-of-agents-hermes</h1>
-  <p><strong>AI Agent Sessions as Pixel-Art Realm</strong></p>
-  <p>Watch your AI coding sessions grow a peaceful pixel-art realm. Run it with npx.</p>
-  <p>
-    <a href="#features">Features</a> •
-    <a href="#quick-start">Quick Start</a> •
-    <a href="#how-it-works">How It Works</a> •
-    <a href="#contributing">Contributing</a>
-  </p>
+# age-of-agents-hermes
+
+Age of Agents
+
+![License](https://img.shields.io/badge/license-OTHER-brightgreen)
+![Language](https://img.shields.io/badge/language-TypeScript-blue)
+![Fork](https://img.shields.io/badge/status-fork-orange)
 </div>
 
 ---
 
-## Screenshot
+<p align="center">
+  <img src="docs/assets/screenshot.png" alt="age-of-agents-hermes preview" width="90%">
+</p>
 
-![Age of Agents](docs/screenshot.png)
-*Pixel-art realm visualization of AI agent coding sessions.*
+<br>
+
+---
 
 ## Features
 
@@ -123,7 +118,18 @@ MIT © Jhonattan L. Jimenez
 
 ---
 
-<div align="center">
-  <p>AI agent sessions as pixel-art realm.</p>
-  <p><a href="https://github.com/OneByJorah">@OneByJorah</a></p>
-</div>
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). All contributions follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## 🔒 Security
+
+Found a vulnerability? Please follow our [Security Policy](SECURITY.md) and report privately to `security@jorahone.com`.
+
+## 📄 License
+
+[Other](LICENSE) © Jhonattan L. Jimenez (OneByJorah)
+
+---
+
+<p align="center">Built with 🌴 by <a href="https://github.com/OneByJorah">OneByJorah</a> · <a href="https://jorahone.com">jorahone.com</a></p>
